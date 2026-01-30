@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - TrustGuard AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1a1a1a;
+            --surface-3: #222;
+            --border: #2a2a2a;
+            --text: #fafafa;
+            --text-muted: #888;
+            --accent: #00ff88;
+            --accent-dim: rgba(0, 255, 136, 0.1);
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --info: #3498db;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Top Navigation */
+        .topnav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-links > a, .nav-dropdown > .nav-trigger {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links > a:hover, .nav-links > a.active,
+        .nav-dropdown:hover > .nav-trigger, .nav-dropdown.active > .nav-trigger {
+            color: var(--text);
+            background: var(--surface);
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-trigger i {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .nav-dropdown:hover .nav-trigger i {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 200;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-dropdown-menu a:hover {
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .nav-dropdown-menu a i {
+            width: 18px;
+            color: var(--accent);
+        }
+
+        .nav-dropdown-menu a span {
+            flex: 1;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Main Content */
+        .main-container {
+            margin-top: 60px;
+            padding: 40px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 36px;
+            font-weight: 600;
+            letter-spacing: -1px;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-outline {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Filters Bar */
+        .filters-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            align-items: center;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 16px;
+        }
+
+        .search-box i {
+            color: var(--text-muted);
+            margin-right: 12px;
+        }
+
+        .search-box input {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 12px 0;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-box input:focus {
+            outline: none;
+        }
+
+        .filter-dropdown {
+            position: relative;
+        }
+
+        .filter-btn {
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--text-muted);
+        }
+
+        .filter-btn i:last-child {
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        /* Stats Summary */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-icon.green { background: var(--accent-dim); color: var(--accent); }
+        .stat-icon.yellow { background: rgba(255, 165, 2, 0.1); color: var(--warning); }
+        .stat-icon.red { background: rgba(255, 71, 87, 0.1); color: var(--danger); }
+        .stat-icon.blue { background: rgba(52, 152, 219, 0.1); color: var(--info); }
+
+        .stat-info {
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* History Table */
+        .history-table {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 1fr 140px 120px 120px 100px;
+            padding: 16px 24px;
+            background: var(--surface-2);
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 1fr 140px 120px 120px 100px;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .table-row:hover {
+            background: var(--surface-2);
+        }
+
+        .table-row:last-child {
+            border-bottom: none;
+        }
+
+        .content-cell {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .content-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .content-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 400px;
+        }
+
+        .content-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--bg);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .type-badge i {
+            font-size: 12px;
+        }
+
+        .score-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-bar {
+            width: 50px;
+            height: 6px;
+            background: var(--surface-3);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .score-fill.high { background: var(--accent); }
+        .score-fill.medium { background: var(--warning); }
+        .score-fill.low { background: var(--danger); }
+
+        .score-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            min-width: 32px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.verified {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .status-badge.warning {
+            background: rgba(255, 165, 2, 0.1);
+            color: var(--warning);
+        }
+
+        .status-badge.flagged {
+            background: rgba(255, 71, 87, 0.1);
+            color: var(--danger);
+        }
+
+        .date-cell {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            background: var(--bg);
+            border: none;
+            border-radius: 6px;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            color: var(--text);
+            background: var(--surface-3);
+        }
+
+        .action-btn.delete:hover {
+            color: var(--danger);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .pagination-info {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover, .page-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .page-btn.active {
+            background: var(--accent-dim);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .table-header, .table-row {
+                grid-template-columns: 1fr 120px 100px 100px;
+            }
+            
+            .actions-cell {
+                display: none;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .table-header {
+                display: none;
+            }
+
+            .table-row {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .content-info h4 {
+                max-width: 100%;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .main-container {
+                padding: 24px 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="topnav">
+        <a href="index.html" class="logo">
+            <div class="logo-mark">TG</div>
+            <span>TrustGuard</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <div class="nav-dropdown">
+                <span class="nav-trigger">Analyze <i class="fas fa-chevron-down"></i></span>
+                <div class="nav-dropdown-menu">
+                    <a href="analyze-text.html"><i class="fas fa-align-left"></i> <span>Analyze Text</span></a>
+                    <a href="upload-file.html"><i class="fas fa-cloud-arrow-up"></i> <span>Upload Media</span></a>
+                    <a href="scan-url.html"><i class="fas fa-globe"></i> <span>Scan URL</span></a>
+                </div>
+            </div>
+            <a href="history.html" class="active">History</a>
+            <a href="#">Settings</a>
+        </div>
+
+        <div class="nav-right">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>System Active</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h1>Analysis History</h1>
+                <p>View and manage all your previous content analyses</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn-outline" id="exportBtn">
+                    <i class="fas fa-download"></i>
+                    Export
+                </button>
+                <button class="btn-outline" id="clearAllBtn">
+                    <i class="fas fa-trash"></i>
+                    Clear All
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters Bar -->
+        <div class="filters-bar">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search analyses...">
+            </div>
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="typeFilterBtn">
+                    <i class="fas fa-filter"></i>
+                    Type: All
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="filter-dropdown">
+                <button class="filter-btn">
+                    <i class="fas fa-calendar"></i>
+                    Date: Last 30 Days
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            <div class="filter-dropdown">
+                <button class="filter-btn">
+                    <i class="fas fa-sort"></i>
+                    Sort: Newest
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Summary -->
+        <div class="stats-summary">
+            <div class="stat-box">
+                <div class="stat-icon blue">
+                    <i class="fas fa-chart-bar"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="totalAnalyses">0</div>
+                    <div class="stat-label">Total Analyses</div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon green">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="verifiedCount">0</div>
+                    <div class="stat-label">Verified Content</div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon yellow">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="warningCount">0</div>
+                    <div class="stat-label">Warnings</div>
+                </div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-icon red">
+                    <i class="fas fa-flag"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value" id="flaggedCount">0</div>
+                    <div class="stat-label">Flagged</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="history-table">
+            <div class="table-header">
+                <span>Content</span>
+                <span>Type</span>
+                <span>Trust Score</span>
+                <span>Status</span>
+                <span>Date</span>
+            </div>
+
+            <div id="historyRows">
+                <!-- Dynamic rows will be inserted here -->
+                <div class="empty-state" style="padding: 60px; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 16px;"></i>
+                    <p>Loading history...</p>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <span class="pagination-info" id="paginationInfo">Showing 0 results</span>
+                <div class="pagination-controls" id="paginationControls">
+                    <!-- Dynamic pagination -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5001';
+        let allHistory = [];
+        let currentFilter = 'all';
+        let searchQuery = '';
+        
+        // Format date for display
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === 0) return 'Today';
+            if (diffDays === 1) return 'Yesterday';
+            if (diffDays < 7) return `${diffDays} days ago`;
+            
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        
+        // Get status based on trust score
+        function getStatus(score) {
+            if (score >= 70) return { class: 'verified', icon: 'check', text: 'Verified' };
+            if (score >= 40) return { class: 'warning', icon: 'exclamation', text: 'Warning' };
+            return { class: 'flagged', icon: 'times', text: 'Flagged' };
+        }
+        
+        // Get score class based on value
+        function getScoreClass(score) {
+            if (score >= 70) return 'high';
+            if (score >= 40) return 'medium';
+            return 'low';
+        }
+        
+        // Get icon for content type
+        function getContentIcon(type) {
+            const icons = {
+                'text': 'file-alt',
+                'image': 'image',
+                'video': 'video',
+                'url': 'globe',
+                'document': 'file-pdf'
+            };
+            return icons[type] || 'file-alt';
+        }
+        
+        // Render a single history row
+        function renderRow(item) {
+            const status = getStatus(item.trust_score);
+            const scoreClass = getScoreClass(item.trust_score);
+            const contentIcon = getContentIcon(item.content_type);
+            
+            return `
+                <div class="table-row" data-id="${item.id}">
+                    <div class="content-cell">
+                        <div class="content-icon"><i class="fas fa-${contentIcon}"></i></div>
+                        <div class="content-info">
+                            <h4>${item.title}</h4>
+                            <span>${item.word_count ? item.word_count.toLocaleString() + ' words analyzed' : item.analysis_type}</span>
+                        </div>
+                    </div>
+                    <div class="type-badge"><i class="fas fa-${contentIcon === 'file-alt' ? 'align-left' : contentIcon}"></i> ${item.content_type.charAt(0).toUpperCase() + item.content_type.slice(1)}</div>
+                    <div class="score-cell">
+                        <div class="score-bar"><div class="score-fill ${scoreClass}" style="width: ${item.trust_score}%"></div></div>
+                        <span class="score-value">${item.trust_score}</span>
+                    </div>
+                    <span class="status-badge ${status.class}"><i class="fas fa-${status.icon}"></i> ${status.text}</span>
+                    <span class="date-cell">${formatDate(item.timestamp)}</span>
+                </div>
+            `;
+        }
+        
+        // Render empty state
+        function renderEmptyState() {
+            return `
+                <div style="padding: 80px 40px; text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;"></i>
+                    <h3 style="color: var(--text); margin-bottom: 8px;">No Analysis History</h3>
+                    <p>Your analysis results will appear here. Go to <a href="analyze-text.html" style="color: var(--accent);">Analyze Text</a> to get started.</p>
+                </div>
+            `;
+        }
+        
+        // Update stats display
+        function updateStats(history) {
+            const total = history.length;
+            const verified = history.filter(h => h.trust_score >= 70).length;
+            const warnings = history.filter(h => h.trust_score >= 40 && h.trust_score < 70).length;
+            const flagged = history.filter(h => h.trust_score < 40).length;
+            
+            document.getElementById('totalAnalyses').textContent = total;
+            document.getElementById('verifiedCount').textContent = verified;
+            document.getElementById('warningCount').textContent = warnings;
+            document.getElementById('flaggedCount').textContent = flagged;
+        }
+        
+        // Filter and search history
+        function getFilteredHistory() {
+            let filtered = [...allHistory];
+            
+            // Apply type filter
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(h => h.content_type === currentFilter);
+            }
+            
+            // Apply search
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filtered = filtered.filter(h => 
+                    h.title.toLowerCase().includes(query) || 
+                    (h.analysis_type && h.analysis_type.toLowerCase().includes(query))
+                );
+            }
+            
+            return filtered;
+        }
+        
+        // Render history list
+        function renderHistory() {
+            const container = document.getElementById('historyRows');
+            const filtered = getFilteredHistory();
+            
+            if (filtered.length === 0) {
+                container.innerHTML = renderEmptyState();
+                document.getElementById('paginationInfo').textContent = 'No results found';
+                return;
+            }
+            
+            container.innerHTML = filtered.map(item => renderRow(item)).join('');
+            document.getElementById('paginationInfo').textContent = `Showing ${filtered.length} of ${allHistory.length} results`;
+            
+            // Add click handlers for rows
+            container.querySelectorAll('.table-row').forEach(row => {
+                row.addEventListener('click', () => {
+                    const id = row.dataset.id;
+                    console.log('Viewing analysis:', id);
+                    // Could open detail modal here
+                });
+            });
+        }
+        
+        // Load history from API
+        async function loadHistory() {
+            try {
+                const response = await fetch(`${API_URL}/api/history`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    allHistory = data.history || [];
+                    updateStats(allHistory);
+                    renderHistory();
+                } else {
+                    console.error('Failed to load history:', data.error);
+                    document.getElementById('historyRows').innerHTML = renderEmptyState();
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+                document.getElementById('historyRows').innerHTML = `
+                    <div style="padding: 60px; text-align: center; color: var(--text-muted);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 32px; margin-bottom: 16px; color: var(--warning);"></i>
+                        <p>Could not connect to server. Make sure the backend is running.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Clear all history
+        async function clearAllHistory() {
+            if (!confirm('Are you sure you want to clear all history? This cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/api/history/clear`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    allHistory = [];
+                    updateStats([]);
+                    renderHistory();
+                }
+            } catch (error) {
+                console.error('Error clearing history:', error);
+                alert('Failed to clear history. Make sure the backend is running.');
+            }
+        }
+        
+        // Export history
+        async function exportHistory() {
+            try {
+                const response = await fetch(`${API_URL}/api/history/export`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const blob = new Blob([JSON.stringify(data.history, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `trustguard-history-${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                console.error('Error exporting history:', error);
+                alert('Failed to export history. Make sure the backend is running.');
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHistory();
+            
+            // Export button
+            document.getElementById('exportBtn').addEventListener('click', exportHistory);
+            
+            // Clear all button
+            document.getElementById('clearAllBtn').addEventListener('click', clearAllHistory);
+            
+            // Search input
+            const searchInput = document.querySelector('.search-box input');
+            searchInput.addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                renderHistory();
+            });
+            
+            // Filter button (simplified - just toggles between all and text)
+            const filterBtn = document.getElementById('typeFilterBtn');
+            filterBtn.addEventListener('click', () => {
+                const types = ['all', 'text', 'image', 'url'];
+                const currentIndex = types.indexOf(currentFilter);
+                currentFilter = types[(currentIndex + 1) % types.length];
+                filterBtn.innerHTML = `<i class="fas fa-filter"></i> Type: ${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)} <i class="fas fa-chevron-down"></i>`;
+                renderHistory();
+            });
+        });
+    </script>
+</body>
+</html>

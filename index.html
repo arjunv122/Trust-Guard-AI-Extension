@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustGuard AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1a1a1a;
+            --border: #2a2a2a;
+            --text: #fafafa;
+            --text-muted: #888;
+            --accent: #00ff88;
+            --accent-dim: rgba(0, 255, 136, 0.1);
+            --danger: #ff4757;
+            --warning: #ffa502;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Noise texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Top Navigation */
+        .topnav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-links > a, .nav-dropdown > .nav-trigger {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links > a:hover, .nav-links > a.active,
+        .nav-dropdown:hover > .nav-trigger, .nav-dropdown.active > .nav-trigger {
+            color: var(--text);
+            background: var(--surface);
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-trigger i {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .nav-dropdown:hover .nav-trigger i {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 200;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-dropdown-menu a:hover {
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .nav-dropdown-menu a i {
+            width: 18px;
+            color: var(--accent);
+        }
+
+        .nav-dropdown-menu a span {
+            flex: 1;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Main Layout */
+        .main-container {
+            margin-top: 60px;
+            min-height: calc(100vh - 60px);
+            display: grid;
+            grid-template-columns: 1fr 360px;
+        }
+
+        /* Left Content */
+        .content-area {
+            padding: 40px;
+            border-right: 1px solid var(--border);
+        }
+
+        /* Hero Section */
+        .hero {
+            margin-bottom: 60px;
+        }
+
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 600;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 .highlight {
+            color: var(--accent);
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--text-muted);
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: var(--border);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .stat-item {
+            background: var(--surface);
+            padding: 28px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 600;
+            letter-spacing: -1px;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-value.green { color: var(--accent); }
+        .stat-value.red { color: var(--danger); }
+        .stat-value.yellow { color: var(--warning); }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Action Cards */
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .action-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--accent);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .action-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-4px);
+        }
+
+        .action-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-dim);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .action-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .action-card p {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .action-arrow {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            width: 32px;
+            height: 32px;
+            background: var(--surface-2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover .action-arrow {
+            background: var(--accent);
+            color: var(--bg);
+            transform: translateX(4px);
+        }
+
+        /* Trust Score Display */
+        .trust-display {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            position: relative;
+        }
+
+        .trust-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+        }
+
+        .trust-header h3 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .trust-period {
+            display: flex;
+            gap: 4px;
+        }
+
+        .trust-period button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .trust-period button.active, .trust-period button:hover {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .trust-visual {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 160px;
+            gap: 8px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trust-bar {
+            flex: 1;
+            background: var(--accent-dim);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .trust-bar:hover {
+            background: var(--accent);
+        }
+
+        .trust-bar::after {
+            content: attr(data-value);
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .trust-legend {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+        }
+
+        .legend-item {
+            text-align: center;
+        }
+
+        .legend-value {
+            font-size: 24px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .legend-label {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Right Sidebar */
+        .sidebar {
+            padding: 40px 24px;
+            background: var(--surface);
+        }
+
+        .sidebar-section {
+            margin-bottom: 32px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 14px;
+            background: var(--bg);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .activity-item:hover {
+            background: var(--surface-2);
+        }
+
+        .activity-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .activity-indicator.success { background: var(--accent); }
+        .activity-indicator.warning { background: var(--warning); }
+        .activity-indicator.danger { background: var(--danger); }
+
+        .activity-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .activity-text {
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .activity-meta {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Threat Summary */
+        .threat-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .threat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 8px;
+            border-left: 3px solid var(--danger);
+        }
+
+        .threat-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .threat-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .threat-count {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--danger);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Quick Links */
+        .quick-links {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quick-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .quick-link:hover {
+            background: var(--surface-2);
+        }
+
+        .quick-link i {
+            color: var(--text-muted);
+            width: 20px;
+            text-align: center;
+        }
+
+        .quick-link span {
+            font-size: 13px;
+        }
+
+        /* Footer */
+        .sidebar-footer {
+            margin-top: auto;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), #00cc6a);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--bg);
+        }
+
+        .user-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .user-info span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+
+            .action-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .stats-row {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .content-area {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="topnav">
+        <div class="logo">
+            <div class="logo-mark">TG</div>
+            <span>TrustGuard</span>
+        </div>
+
+        <div class="nav-links">
+            <a href="index.html" class="active">Dashboard</a>
+            <div class="nav-dropdown">
+                <span class="nav-trigger">Analyze <i class="fas fa-chevron-down"></i></span>
+                <div class="nav-dropdown-menu">
+                    <a href="analyze-text.html"><i class="fas fa-align-left"></i> <span>Analyze Text</span></a>
+                    <a href="upload-file.html"><i class="fas fa-cloud-arrow-up"></i> <span>Upload Media</span></a>
+                    <a href="scan-url.html"><i class="fas fa-globe"></i> <span>Scan URL</span></a>
+                </div>
+            </div>
+            <a href="history.html">History</a>
+            <a href="#">Settings</a>
+        </div>
+
+        <div class="nav-right">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>System Active</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        
+        <!-- Content Area -->
+        <main class="content-area">
+            
+            <!-- Hero Section -->
+            <section class="hero">
+                <div class="hero-label">
+                    <i class="fas fa-shield-halved"></i>
+                    AI-Powered Verification
+                </div>
+                <h1>Detect <span class="highlight">AI-generated</span><br>misinformation</h1>
+                <p>Advanced deepfake detection, hallucination checking, and fact verification powered by state-of-the-art machine learning.</p>
+            </section>
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-value">1,247</div>
+                    <div class="stat-label">Analyses</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value green">82%</div>
+                    <div class="stat-label">Trust Score</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value red">47</div>
+                    <div class="stat-label">Threats</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value yellow">12</div>
+                    <div class="stat-label">Pending</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <h2 class="section-title">Start Analysis</h2>
+            <div class="action-grid">
+                <a href="analyze-text.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-align-left"></i>
+                    </div>
+                    <h3>Analyze Text</h3>
+                    <p>Check for AI hallucinations and verify factual claims in any text content.</p>
+                    <span class="action-arrow"><i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="upload-file.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-cloud-arrow-up"></i>
+                    </div>
+                    <h3>Upload Media</h3>
+                    <p>Detect deepfakes and manipulated content in images and videos.</p>
+                    <span class="action-arrow"><i class="fas fa-arrow-right"></i></span>
+                </a>
+
+                <a href="scan-url.html" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-globe"></i>
+                    </div>
+                    <h3>Scan URL</h3>
+                    <p>Analyze any webpage for misinformation and credibility signals.</p>
+                    <span class="action-arrow"><i class="fas fa-arrow-right"></i></span>
+                </a>
+            </div>
+
+            <!-- Trust Score Chart -->
+            <h2 class="section-title">Trust Score Trend</h2>
+            <div class="trust-display">
+                <div class="trust-header">
+                    <h3>Last 30 Days</h3>
+                    <div class="trust-period">
+                        <button>7D</button>
+                        <button class="active">30D</button>
+                        <button>90D</button>
+                    </div>
+                </div>
+
+                <div class="trust-visual">
+                    <div class="trust-bar" style="height: 45%;" data-value="Jan 1"></div>
+                    <div class="trust-bar" style="height: 52%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 48%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 65%;" data-value="Jan 8"></div>
+                    <div class="trust-bar" style="height: 58%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 72%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 68%;" data-value="Jan 15"></div>
+                    <div class="trust-bar" style="height: 75%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 70%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 78%;" data-value="Jan 22"></div>
+                    <div class="trust-bar" style="height: 82%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 85%;" data-value=""></div>
+                    <div class="trust-bar" style="height: 82%;" data-value="Jan 29"></div>
+                </div>
+
+                <div class="trust-legend">
+                    <div class="legend-item">
+                        <div class="legend-value" style="color: var(--accent);">82%</div>
+                        <div class="legend-label">Current Score</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-value">+37%</div>
+                        <div class="legend-label">Improvement</div>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-value">156</div>
+                        <div class="legend-label">Analyses</div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            
+            <!-- Activity Feed -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Recent Activity</h3>
+                <div class="activity-feed">
+                    <div class="activity-item">
+                        <span class="activity-indicator success"></span>
+                        <div class="activity-content">
+                            <div class="activity-text">Climate report verified</div>
+                            <div class="activity-meta">2 hours ago · 94% trust</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-indicator danger"></span>
+                        <div class="activity-content">
+                            <div class="activity-text">Deepfake detected in video</div>
+                            <div class="activity-meta">5 hours ago · 12% trust</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-indicator warning"></span>
+                        <div class="activity-content">
+                            <div class="activity-text">Hallucination found in article</div>
+                            <div class="activity-meta">1 day ago · 45% trust</div>
+                        </div>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-indicator success"></span>
+                        <div class="activity-content">
+                            <div class="activity-text">5 claims fact-checked</div>
+                            <div class="activity-meta">1 day ago · 5/5 verified</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Threats Summary -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Threats Detected</h3>
+                <div class="threat-list">
+                    <div class="threat-item">
+                        <div class="threat-info">
+                            <h4>Deepfakes</h4>
+                            <span>Images & Videos</span>
+                        </div>
+                        <div class="threat-count">23</div>
+                    </div>
+                    <div class="threat-item">
+                        <div class="threat-info">
+                            <h4>Hallucinations</h4>
+                            <span>AI-Generated Text</span>
+                        </div>
+                        <div class="threat-count">24</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="sidebar-section">
+                <h3 class="sidebar-title">Quick Links</h3>
+                <div class="quick-links">
+                    <a href="#" class="quick-link">
+                        <i class="fas fa-book"></i>
+                        <span>Documentation</span>
+                    </a>
+                    <a href="#" class="quick-link">
+                        <i class="fas fa-code"></i>
+                        <span>API Reference</span>
+                    </a>
+                    <a href="#" class="quick-link">
+                        <i class="fas fa-headset"></i>
+                        <span>Support</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- User Block -->
+            <div class="sidebar-footer">
+                <div class="user-block">
+                    <div class="user-avatar">NS</div>
+                    <div class="user-info">
+                        <h4>Naveen Sekhar</h4>
+                        <span>Professional Plan</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+    </div>
+
+    <script>
+        // Add hover effect to bars
+        document.querySelectorAll('.trust-bar').forEach(bar => {
+            bar.addEventListener('mouseenter', () => {
+                bar.style.background = 'var(--accent)';
+            });
+            bar.addEventListener('mouseleave', () => {
+                bar.style.background = 'var(--accent-dim)';
+            });
+        });
+    </script>
+</body>
+</html>

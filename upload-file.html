@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Media - TrustGuard AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1a1a1a;
+            --surface-3: #222;
+            --border: #2a2a2a;
+            --text: #fafafa;
+            --text-muted: #888;
+            --accent: #00ff88;
+            --accent-dim: rgba(0, 255, 136, 0.1);
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --info: #3498db;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Top Navigation */
+        .topnav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-links > a, .nav-dropdown > .nav-trigger {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links > a:hover, .nav-links > a.active,
+        .nav-dropdown:hover > .nav-trigger, .nav-dropdown.active > .nav-trigger {
+            color: var(--text);
+            background: var(--surface);
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-trigger i {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .nav-dropdown:hover .nav-trigger i {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 200;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-dropdown-menu a:hover {
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .nav-dropdown-menu a i {
+            width: 18px;
+            color: var(--accent);
+        }
+
+        .nav-dropdown-menu a span {
+            flex: 1;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Main Content */
+        .main-container {
+            margin-top: 60px;
+            padding: 40px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--accent);
+        }
+
+        .breadcrumb span {
+            color: var(--text-muted);
+        }
+
+        .breadcrumb .current {
+            color: var(--text);
+        }
+
+        /* Page Header */
+        .page-header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .page-header h1 {
+            font-size: 42px;
+            font-weight: 600;
+            letter-spacing: -1.5px;
+            margin-bottom: 12px;
+        }
+
+        .page-header p {
+            font-size: 16px;
+            color: var(--text-muted);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Upload Zone */
+        .upload-zone {
+            background: var(--surface);
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 32px;
+        }
+
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .upload-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--surface-2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+            color: var(--accent);
+            transition: all 0.3s;
+        }
+
+        .upload-zone:hover .upload-icon {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .upload-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .upload-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .upload-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--bg);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .upload-formats {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .format-tag {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--surface-2);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .format-tag i {
+            font-size: 14px;
+        }
+
+        /* File Preview */
+        .file-preview {
+            display: none;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .file-preview.visible {
+            display: block;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .preview-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+        }
+
+        .remove-file {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .preview-content {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .preview-thumbnail {
+            width: 120px;
+            height: 120px;
+            background: var(--surface-2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .preview-thumbnail img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-thumbnail i {
+            font-size: 40px;
+            color: var(--text-muted);
+        }
+
+        .preview-info {
+            flex: 1;
+        }
+
+        .preview-filename {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .preview-meta {
+            display: flex;
+            gap: 16px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .preview-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Analysis Options */
+        .options-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .options-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .option-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .option-card:hover, .option-card.selected {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .option-card.selected .option-check {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .option-card.selected .option-check i {
+            display: block;
+        }
+
+        .option-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .option-check {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg);
+            font-size: 12px;
+        }
+
+        .option-check i {
+            display: none;
+        }
+
+        .option-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .option-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding-left: 32px;
+        }
+
+        /* Analyze Button */
+        .analyze-btn {
+            width: 100%;
+            padding: 18px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results */
+        .results-section {
+            display: none;
+            margin-top: 40px;
+        }
+
+        .results-section.visible {
+            display: block;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .results-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 24px;
+        }
+
+        .result-score-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .result-score {
+            font-size: 56px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .result-score.warning { color: var(--warning); }
+        .result-score.danger { color: var(--danger); }
+
+        .result-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .result-details {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .detail-value.success { color: var(--accent); }
+        .detail-value.warning { color: var(--warning); }
+        .detail-value.danger { color: var(--danger); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 24px;
+            }
+
+            .page-header h1 {
+                font-size: 32px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="topnav">
+        <a href="index.html" class="logo">
+            <div class="logo-mark">TG</div>
+            <span>TrustGuard</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <div class="nav-dropdown active">
+                <span class="nav-trigger">Analyze <i class="fas fa-chevron-down"></i></span>
+                <div class="nav-dropdown-menu">
+                    <a href="analyze-text.html"><i class="fas fa-align-left"></i> <span>Analyze Text</span></a>
+                    <a href="upload-file.html"><i class="fas fa-cloud-arrow-up"></i> <span>Upload Media</span></a>
+                    <a href="scan-url.html"><i class="fas fa-globe"></i> <span>Scan URL</span></a>
+                </div>
+            </div>
+            <a href="history.html">History</a>
+            <a href="#">Settings</a>
+        </div>
+
+        <div class="nav-right">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>System Active</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="index.html">Dashboard</a>
+            <span>/</span>
+            <span class="current">Upload Media</span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Upload Media</h1>
+            <p>Detect deepfakes and manipulated content in images and videos using AI-powered analysis.</p>
+        </div>
+
+        <!-- Upload Zone -->
+        <div class="upload-zone" id="uploadZone">
+            <input type="file" id="fileInput" accept="image/*,video/*,.pdf,.docx" hidden>
+            <div class="upload-icon">
+                <i class="fas fa-cloud-arrow-up"></i>
+            </div>
+            <h3 class="upload-title">Drop files here or click to upload</h3>
+            <p class="upload-subtitle">Maximum file size: 50MB</p>
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-folder-open"></i>
+                Browse Files
+            </button>
+            <div class="upload-formats">
+                <span class="format-tag"><i class="fas fa-image"></i> PNG, JPG, GIF</span>
+                <span class="format-tag"><i class="fas fa-video"></i> MP4, MOV, AVI</span>
+                <span class="format-tag"><i class="fas fa-file-pdf"></i> PDF</span>
+                <span class="format-tag"><i class="fas fa-file-word"></i> DOCX</span>
+            </div>
+        </div>
+
+        <!-- File Preview -->
+        <div class="file-preview" id="filePreview">
+            <div class="preview-header">
+                <span class="preview-title">Selected File</span>
+                <button class="remove-file" id="removeFile">
+                    <i class="fas fa-times"></i> Remove
+                </button>
+            </div>
+            <div class="preview-content">
+                <div class="preview-thumbnail" id="previewThumbnail">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="preview-info">
+                    <div class="preview-filename" id="fileName">filename.jpg</div>
+                    <div class="preview-meta">
+                        <span><i class="fas fa-file"></i> <span id="fileType">Image</span></span>
+                        <span><i class="fas fa-database"></i> <span id="fileSize">2.4 MB</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Options -->
+        <div class="options-section">
+            <h4 class="options-title">Detection Methods</h4>
+            <div class="options-grid">
+                <div class="option-card selected" data-option="deepfake">
+                    <div class="option-header">
+                        <span class="option-check"><i class="fas fa-check"></i></span>
+                        <span class="option-name">Deepfake Detection</span>
+                    </div>
+                    <p class="option-desc">Detect AI-generated or manipulated faces</p>
+                </div>
+
+                <div class="option-card selected" data-option="manipulation">
+                    <div class="option-header">
+                        <span class="option-check"><i class="fas fa-check"></i></span>
+                        <span class="option-name">Image Manipulation</span>
+                    </div>
+                    <p class="option-desc">Find edited, spliced, or altered regions</p>
+                </div>
+
+                <div class="option-card" data-option="metadata">
+                    <div class="option-header">
+                        <span class="option-check"><i class="fas fa-check"></i></span>
+                        <span class="option-name">Metadata Analysis</span>
+                    </div>
+                    <p class="option-desc">Extract and verify file metadata</p>
+                </div>
+
+                <div class="option-card" data-option="origin">
+                    <div class="option-header">
+                        <span class="option-check"><i class="fas fa-check"></i></span>
+                        <span class="option-name">Origin Tracing</span>
+                    </div>
+                    <p class="option-desc">Search for original source online</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyze Button -->
+        <button class="analyze-btn" id="analyzeBtn" disabled>
+            <i class="fas fa-shield-halved"></i>
+            Analyze Media
+        </button>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-header">
+                <h2 class="results-title">Analysis Results</h2>
+            </div>
+            <div class="results-grid">
+                <div class="result-score-card">
+                    <div class="result-score" id="resultScore">87</div>
+                    <div class="result-label">Trust Score</div>
+                </div>
+                <div class="result-details" id="resultDetails">
+                    <div class="detail-item">
+                        <span class="detail-label">Deepfake Detection</span>
+                        <span class="detail-value success">No deepfake detected</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Manipulation Check</span>
+                        <span class="detail-value success">No alterations found</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Metadata Status</span>
+                        <span class="detail-value warning">Partially stripped</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">AI Generation</span>
+                        <span class="detail-value success">12% probability</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5001';
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        
+        let selectedFile = null;
+
+        // Drag and drop
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file) handleFile(file);
+        });
+
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        function handleFile(file) {
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatSize(file.size);
+            document.getElementById('fileType').textContent = file.type.split('/')[0] || 'Document';
+            
+            const thumbnail = document.getElementById('previewThumbnail');
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    thumbnail.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type.startsWith('video/')) {
+                thumbnail.innerHTML = '<i class="fas fa-video"></i>';
+            } else {
+                thumbnail.innerHTML = '<i class="fas fa-file"></i>';
+            }
+
+            filePreview.classList.add('visible');
+            uploadZone.style.display = 'none';
+            analyzeBtn.disabled = false;
+            resultsSection.classList.remove('visible');
+        }
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        document.getElementById('removeFile').addEventListener('click', () => {
+            selectedFile = null;
+            filePreview.classList.remove('visible');
+            uploadZone.style.display = 'block';
+            analyzeBtn.disabled = true;
+            fileInput.value = '';
+            resultsSection.classList.remove('visible');
+        });
+
+        // Option cards
+        document.querySelectorAll('.option-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.classList.toggle('selected');
+            });
+        });
+
+        // Get selected options
+        function getSelectedOptions() {
+            const options = {};
+            document.querySelectorAll('.option-card.selected').forEach(card => {
+                options[card.dataset.option] = true;
+            });
+            return options;
+        }
+
+        // Update results display
+        function updateResults(data) {
+            const score = Math.round(data.trust_score || 50);
+            const scoreEl = document.getElementById('resultScore');
+            scoreEl.textContent = score;
+            
+            // Set score color class
+            scoreEl.className = 'result-score';
+            if (score >= 70) scoreEl.classList.add('success');
+            else if (score >= 40) scoreEl.classList.add('warning');
+            else scoreEl.classList.add('danger');
+            
+            // Update details
+            const detailsEl = document.getElementById('resultDetails');
+            const details = data.details || {};
+            
+            let detailsHTML = '';
+            
+            // Deepfake detection
+            if (details.deepfake_detection) {
+                const df = details.deepfake_detection;
+                detailsHTML += `
+                    <div class="detail-item">
+                        <span class="detail-label">Deepfake Detection</span>
+                        <span class="detail-value ${df.status}">${df.label}</span>
+                    </div>
+                `;
+            }
+            
+            // Manipulation check
+            if (details.manipulation_check) {
+                const mc = details.manipulation_check;
+                detailsHTML += `
+                    <div class="detail-item">
+                        <span class="detail-label">Manipulation Check</span>
+                        <span class="detail-value ${mc.status}">${mc.label}</span>
+                    </div>
+                `;
+            }
+            
+            // Content safety
+            if (details.content_safety) {
+                const cs = details.content_safety;
+                detailsHTML += `
+                    <div class="detail-item">
+                        <span class="detail-label">Content Safety</span>
+                        <span class="detail-value ${cs.status}">${cs.label}</span>
+                    </div>
+                `;
+            }
+            
+            // AI generation
+            if (details.ai_generation) {
+                const ai = details.ai_generation;
+                detailsHTML += `
+                    <div class="detail-item">
+                        <span class="detail-label">AI Generation</span>
+                        <span class="detail-value ${ai.status}">${ai.label}</span>
+                    </div>
+                `;
+            }
+            
+            // Video-specific details
+            if (data.content_type === 'video') {
+                // Frame analysis detail
+                if (details.frame_analysis) {
+                    const fa = details.frame_analysis;
+                    detailsHTML += `
+                        <div class="detail-item">
+                            <span class="detail-label">AI Frame Analysis</span>
+                            <span class="detail-value ${fa.status}">${fa.label}</span>
+                        </div>
+                    `;
+                }
+                
+                detailsHTML += `
+                    <div class="detail-item">
+                        <span class="detail-label">Frames Analyzed</span>
+                        <span class="detail-value">${data.frames_analyzed || 0} of ${data.total_frames || 0}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Video Duration</span>
+                        <span class="detail-value">${data.duration_seconds || 0}s @ ${data.fps || 0} FPS</span>
+                    </div>
+                `;
+                
+                // Show AI detection confidence
+                if (data.ai_frame_ratio !== undefined) {
+                    const aiRatio = data.ai_frame_ratio;
+                    const ratioStatus = aiRatio > 50 ? 'danger' : aiRatio > 30 ? 'warning' : 'success';
+                    detailsHTML += `
+                        <div class="detail-item">
+                            <span class="detail-label">AI Detection Confidence</span>
+                            <span class="detail-value ${ratioStatus}">${aiRatio}% of frames flagged</span>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Status label
+            if (data.status_label) {
+                detailsHTML += `
+                    <div class="detail-item" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                        <span class="detail-label">Overall Assessment</span>
+                        <span class="detail-value ${data.status === 'verified' ? 'success' : data.status === 'warning' ? 'warning' : 'danger'}">${data.status_label}</span>
+                    </div>
+                `;
+            }
+            
+            // Fallback if no details
+            if (!detailsHTML) {
+                detailsHTML = `
+                    <div class="detail-item">
+                        <span class="detail-label">Analysis</span>
+                        <span class="detail-value">${data.label || 'Complete'}</span>
+                    </div>
+                `;
+            }
+            
+            detailsEl.innerHTML = detailsHTML;
+            resultsSection.classList.add('visible');
+        }
+
+        // Show error
+        function showError(message) {
+            const detailsEl = document.getElementById('resultDetails');
+            document.getElementById('resultScore').textContent = '!';
+            document.getElementById('resultScore').className = 'result-score danger';
+            detailsEl.innerHTML = `
+                <div class="detail-item">
+                    <span class="detail-label">Error</span>
+                    <span class="detail-value danger">${message}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Solution</span>
+                    <span class="detail-value">Make sure the backend server is running with ML dependencies installed.</span>
+                </div>
+            `;
+            resultsSection.classList.add('visible');
+        }
+
+        // Analyze
+        analyzeBtn.addEventListener('click', async () => {
+            if (!selectedFile) {
+                alert('Please select a file first');
+                return;
+            }
+            
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing with AI...';
+            resultsSection.classList.remove('visible');
+
+            try {
+                // Create form data for file upload
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('kid_safe_mode', 'false');
+                
+                const response = await fetch(`${API_URL}/api/analyze/media`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    updateResults(data);
+                } else {
+                    showError(data.error || 'Analysis failed');
+                }
+                
+            } catch (error) {
+                console.error('API Error:', error);
+                showError('Could not connect to server. Make sure the backend is running.');
+            } finally {
+                analyzeBtn.innerHTML = '<i class="fas fa-shield-halved"></i> Analyze Media';
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        // Check server status on load
+        (async function checkServer() {
+            try {
+                const response = await fetch(`${API_URL}/api/analyze/media/status`);
+                const status = await response.json();
+                console.log('Media Analyzer Status:', status);
+                
+                if (!status.ml_available) {
+                    console.warn('⚠ ML libraries not installed. Install with: pip install torch transformers pillow opencv-python');
+                }
+                if (!status.models_loaded) {
+                    console.log('Models will be loaded on first analysis...');
+                }
+            } catch (e) {
+                console.warn('⚠ Backend server not detected. Start with: python backend/server.py');
+            }
+        })();
+    </script>
+</body>
+</html>

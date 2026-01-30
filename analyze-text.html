@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyze Text - TrustGuard AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1a1a1a;
+            --surface-3: #222;
+            --border: #2a2a2a;
+            --text: #fafafa;
+            --text-muted: #888;
+            --accent: #00ff88;
+            --accent-dim: rgba(0, 255, 136, 0.1);
+            --danger: #ff4757;
+            --warning: #ffa502;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        /* Top Navigation */
+        .topnav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 18px;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-mark {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--bg);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-links > a, .nav-dropdown > .nav-trigger {
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-links > a:hover, .nav-links > a.active,
+        .nav-dropdown:hover > .nav-trigger, .nav-dropdown.active > .nav-trigger {
+            color: var(--text);
+            background: var(--surface);
+        }
+
+        .nav-dropdown {
+            position: relative;
+        }
+
+        .nav-trigger i {
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .nav-dropdown:hover .nav-trigger i {
+            transform: rotate(180deg);
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s;
+            z-index: 200;
+        }
+
+        .nav-dropdown:hover .nav-dropdown-menu {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .nav-dropdown-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .nav-dropdown-menu a:hover {
+            color: var(--text);
+            background: var(--bg);
+        }
+
+        .nav-dropdown-menu a i {
+            width: 18px;
+            color: var(--accent);
+        }
+
+        .nav-dropdown-menu a span {
+            flex: 1;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: var(--accent-dim);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            font-size: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Main Content */
+        .main-container {
+            margin-top: 60px;
+            padding: 40px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--accent);
+        }
+
+        .breadcrumb span {
+            color: var(--text-muted);
+        }
+
+        .breadcrumb .current {
+            color: var(--text);
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            font-size: 42px;
+            font-weight: 600;
+            letter-spacing: -1.5px;
+            margin-bottom: 12px;
+        }
+
+        .page-header p {
+            font-size: 16px;
+            color: var(--text-muted);
+            max-width: 600px;
+        }
+
+        /* Analysis Form */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 32px;
+        }
+
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .input-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .input-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .input-header h3 {
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-header h3 i {
+            color: var(--accent);
+        }
+
+        .char-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 300px;
+            background: transparent;
+            border: none;
+            padding: 20px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 15px;
+            color: var(--text);
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .text-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .text-input:focus {
+            outline: none;
+        }
+
+        /* Options */
+        .options-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .options-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .option-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .option-row:last-child {
+            border-bottom: none;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .option-label i {
+            color: var(--text-muted);
+            width: 18px;
+        }
+
+        /* Toggle Switch */
+        .toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--surface-3);
+            border-radius: 24px;
+            transition: 0.3s;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: var(--text-muted);
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+        .toggle input:checked + .toggle-slider {
+            background-color: var(--accent-dim);
+            border: 1px solid var(--accent);
+        }
+
+        .toggle input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+            background-color: var(--accent);
+        }
+
+        /* Analyze Button */
+        .analyze-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--bg);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Results Sidebar */
+        .results-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .result-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+        }
+
+        .result-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .result-badge.high {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .result-badge.medium {
+            background: rgba(255, 165, 2, 0.1);
+            color: var(--warning);
+        }
+
+        .result-badge.low {
+            background: rgba(255, 71, 87, 0.1);
+            color: var(--danger);
+        }
+
+        /* Trust Score Display */
+        .score-display {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .score-value {
+            font-size: 64px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .score-value.high { color: var(--accent); }
+        .score-value.medium { color: var(--warning); }
+        .score-value.low { color: var(--danger); }
+
+        .score-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Metrics */
+        .metrics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Findings List */
+        .findings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .finding-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg);
+            border-radius: 8px;
+            border-left: 3px solid var(--warning);
+        }
+
+        .finding-item.danger {
+            border-left-color: var(--danger);
+        }
+
+        .finding-item.success {
+            border-left-color: var(--accent);
+        }
+
+        .finding-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .finding-icon.warning { color: var(--warning); }
+        .finding-icon.danger { color: var(--danger); }
+        .finding-icon.success { color: var(--accent); }
+
+        .finding-text {
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .finding-text a,
+        .finding-item a {
+            color: var(--accent);
+            text-decoration: none;
+            cursor: pointer;
+            pointer-events: auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        .finding-text a:hover,
+        .finding-item a:hover {
+            text-decoration: underline;
+            color: #00cc6a;
+        }
+
+        .source-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--accent);
+            text-decoration: none;
+            cursor: pointer;
+            padding: 2px 6px;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .source-link:hover {
+            background: rgba(0, 255, 136, 0.2);
+            text-decoration: underline;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--bg);
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .analyzing .loading-spinner {
+            display: block;
+        }
+
+        .analyzing .btn-text {
+            display: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .main-container {
+                padding: 24px;
+            }
+
+            .page-header h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="topnav">
+        <a href="index.html" class="logo">
+            <div class="logo-mark">TG</div>
+            <span>TrustGuard</span>
+        </a>
+
+        <div class="nav-links">
+            <a href="index.html">Dashboard</a>
+            <div class="nav-dropdown active">
+                <span class="nav-trigger">Analyze <i class="fas fa-chevron-down"></i></span>
+                <div class="nav-dropdown-menu">
+                    <a href="analyze-text.html"><i class="fas fa-align-left"></i> <span>Analyze Text</span></a>
+                    <a href="upload-file.html"><i class="fas fa-cloud-arrow-up"></i> <span>Upload Media</span></a>
+                    <a href="scan-url.html"><i class="fas fa-globe"></i> <span>Scan URL</span></a>
+                </div>
+            </div>
+            <a href="history.html">History</a>
+            <a href="#">Settings</a>
+        </div>
+
+        <div class="nav-right">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>System Active</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+            <a href="index.html">Dashboard</a>
+            <span>/</span>
+            <span class="current">Analyze Text</span>
+        </div>
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>Analyze Text</h1>
+            <p>Check for AI-generated content, hallucinations, and verify factual claims using advanced machine learning.</p>
+        </div>
+
+        <!-- Analysis Grid -->
+        <div class="analysis-grid">
+            
+            <!-- Input Section -->
+            <div class="input-section">
+                <div class="input-card">
+                    <div class="input-header">
+                        <h3><i class="fas fa-align-left"></i> Input Text</h3>
+                        <span class="char-count"><span id="charCount">0</span> / 10,000</span>
+                    </div>
+                    <textarea class="text-input" id="textInput" placeholder="Paste or type the text you want to analyze for hallucinations, AI-generated content, or factual claims..."></textarea>
+                </div>
+
+                <div class="options-card">
+                    <h4 class="options-title">Analysis Options</h4>
+                    
+                    <div class="option-row">
+                        <div class="option-label">
+                            <i class="fas fa-brain"></i>
+                            <span>Hallucination Detection</span>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" checked id="optHallucination">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="option-row">
+                        <div class="option-label">
+                            <i class="fas fa-robot"></i>
+                            <span>AI Content Detection</span>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" checked id="optAI">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="option-row">
+                        <div class="option-label">
+                            <i class="fas fa-check-double"></i>
+                            <span>Fact Verification</span>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" id="optFact">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- LLM Configuration Card -->
+                <div class="options-card" id="llmConfigCard" style="margin-top: 16px;">
+                    <h4 class="options-title"><i class="fas fa-microchip"></i> LLM-Powered Analysis (SelfCheckGPT)</h4>
+                    
+                    <div id="llmStatus" style="padding: 12px; background: var(--bg); border-radius: 8px; margin-bottom: 12px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span id="llmStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--warning);"></span>
+                            <span id="llmStatusText" style="font-size: 13px; color: var(--text-muted);">Checking LLM status...</span>
+                        </div>
+                    </div>
+                    
+                    <div id="apiKeySection">
+                        <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">
+                            Enter your <a href="https://console.groq.com/keys" target="_blank" style="color: var(--accent);">Groq API Key</a> for advanced hallucination detection:
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="password" id="apiKeyInput" placeholder="Enter your Groq API key..." style="flex: 1; padding: 10px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
+                            <button id="saveApiKeyBtn" style="padding: 10px 16px; background: var(--accent); color: var(--bg); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px;">Save</button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">
+                        <i class="fas fa-info-circle"></i> Without API key, uses heuristic-based detection. With API key, uses LLM-powered SelfCheckGPT approach.
+                    </div>
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn">
+                    <span class="btn-text"><i class="fas fa-search"></i> Analyze Text</span>
+                    <span class="loading-spinner"></span>
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section">
+                
+                <!-- Trust Score -->
+                <div class="result-card" id="scoreCard">
+                    <div class="result-header">
+                        <span class="result-title">Trust Score</span>
+                        <span class="result-badge high" id="scoreBadge">Waiting</span>
+                    </div>
+                    
+                    <div class="score-display">
+                        <div class="score-value high" id="scoreValue">--</div>
+                        <div class="score-label">out of 100</div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-title">Analysis Metrics</span>
+                    </div>
+                    
+                    <div class="metrics-list" id="metricsList">
+                        <div class="empty-state">
+                            <i class="fas fa-chart-bar"></i>
+                            <p>Metrics will appear after analysis</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Findings -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-title">Key Findings</span>
+                    </div>
+                    
+                    <div class="findings-list" id="findingsList">
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <p>Enter text and click Analyze to see findings</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5001';
+        
+        const textInput = document.getElementById('textInput');
+        const charCount = document.getElementById('charCount');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const scoreValue = document.getElementById('scoreValue');
+        const scoreBadge = document.getElementById('scoreBadge');
+        const metricsList = document.getElementById('metricsList');
+        const findingsList = document.getElementById('findingsList');
+
+        // Character count
+        textInput.addEventListener('input', () => {
+            charCount.textContent = textInput.value.length.toLocaleString();
+        });
+
+        // LLM Configuration
+        let llmConfigured = false;
+        const llmStatusDot = document.getElementById('llmStatusDot');
+        const llmStatusText = document.getElementById('llmStatusText');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+        
+        async function checkLLMStatus() {
+            try {
+                const response = await fetch(`${API_URL}/api/config`);
+                const data = await response.json();
+                llmConfigured = data.llm_configured;
+                
+                if (llmConfigured) {
+                    llmStatusDot.style.background = 'var(--accent)';
+                    llmStatusText.innerHTML = `<strong style="color: var(--accent);">✓ LLM Active</strong> - Using ${data.llm_model || 'Groq'} for SelfCheckGPT analysis`;
+                    apiKeyInput.placeholder = '••••••••••••••••';
+                    apiKeyInput.value = '';
+                } else {
+                    llmStatusDot.style.background = 'var(--warning)';
+                    llmStatusText.innerHTML = '<strong style="color: var(--warning);">⚠ LLM Not Configured</strong> - Using heuristic-based detection';
+                }
+            } catch (e) {
+                llmStatusDot.style.background = 'var(--danger)';
+                llmStatusText.innerHTML = '<strong style="color: var(--danger);">✗ Server Offline</strong> - Cannot connect to backend';
+            }
+        }
+        
+        saveApiKeyBtn.addEventListener('click', async () => {
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                alert('Please enter an API key');
+                return;
+            }
+            
+            saveApiKeyBtn.disabled = true;
+            saveApiKeyBtn.textContent = 'Saving...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ groq_api_key: apiKey })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    llmConfigured = true;
+                    llmStatusDot.style.background = 'var(--accent)';
+                    llmStatusText.innerHTML = '<strong style="color: var(--accent);">✓ LLM Active</strong> - API key saved! Using SelfCheckGPT analysis';
+                    apiKeyInput.value = '';
+                    apiKeyInput.placeholder = '••••••••••••••••';
+                } else {
+                    alert('Failed to save API key: ' + data.error);
+                }
+            } catch (e) {
+                alert('Error saving API key: ' + e.message);
+            } finally {
+                saveApiKeyBtn.disabled = false;
+                saveApiKeyBtn.textContent = 'Save';
+            }
+        });
+        
+        // Check LLM status on page load
+        checkLLMStatus();
+
+        // Update UI with results
+        function updateResults(data) {
+            const score = data.trust_score;
+            const isHigh = score >= 80;
+            const isMedium = score >= 50 && score < 80;
+            const metrics = data.metrics || {};
+            const analysis = data.analysis || {};
+            const method = data.method || 'heuristic';
+            
+            // Update score display
+            scoreValue.textContent = score;
+            scoreValue.className = 'score-value ' + (isHigh ? 'high' : isMedium ? 'medium' : 'low');
+            
+            // Show method used
+            const methodBadge = method === 'llm_selfcheck' ? 
+                '<span style="font-size: 10px; background: var(--accent); color: var(--bg); padding: 2px 8px; border-radius: 10px; margin-left: 8px;">SelfCheckGPT</span>' :
+                '<span style="font-size: 10px; background: var(--surface-hover); color: var(--text-muted); padding: 2px 8px; border-radius: 10px; margin-left: 8px;">Heuristic</span>';
+            
+            scoreBadge.innerHTML = (isHigh ? 'High Trust' : isMedium ? 'Medium Trust' : 'Low Trust') + methodBadge;
+            scoreBadge.className = 'result-badge ' + (isHigh ? 'high' : isMedium ? 'medium' : 'low');
+
+            // Update metrics
+            const aiDetection = metrics.ai_detection || 0;
+            const aiColor = aiDetection > 50 ? 'var(--danger)' : aiDetection > 25 ? 'var(--warning)' : 'var(--accent)';
+            
+            // Add LLM-specific metrics if available
+            const llmAssessment = analysis.llm_assessment || null;
+            const llmSummary = analysis.summary || '';
+            
+            metricsList.innerHTML = `
+                ${method === 'llm_selfcheck' ? `
+                <div class="metric-item" style="grid-column: 1 / -1; background: rgba(0,255,136,0.1); border-radius: 8px; padding: 12px;">
+                    <span class="metric-label" style="color: var(--accent);"><i class="fas fa-microchip"></i> LLM Assessment</span>
+                    <span class="metric-value" style="text-transform: capitalize;">${llmAssessment || 'Analyzed'}</span>
+                </div>
+                ` : ''}
+                <div class="metric-item">
+                    <span class="metric-label">Hallucination Score</span>
+                    <span class="metric-value" style="color: var(--accent);">${metrics.hallucination_score || score}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">AI Detection</span>
+                    <span class="metric-value" style="color: ${aiColor};">${aiDetection}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Consistency</span>
+                    <span class="metric-value">${metrics.consistency || analysis.consistency_score || '--'}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Factual Claims</span>
+                    <span class="metric-value">${metrics.factual_claims || 0} found</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Sentences Analyzed</span>
+                    <span class="metric-value">${data.sentence_count || '--'}</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Issues Found</span>
+                    <span class="metric-value" style="color: ${analysis.total_issues > 0 ? 'var(--warning)' : 'var(--accent)'};">${analysis.total_issues || 0}</span>
+                </div>
+            `;
+
+            // Update findings
+            const recommendations = data.recommendations || [];
+            const flaggedSentences = data.flagged_sentences || [];
+            const keyFindings = data.key_findings || [];
+            const simpleSummary = analysis.simple_summary || '';
+            const riskLevel = analysis.overall_risk || 'unknown';
+            
+            let findingsHTML = '';
+            
+            // Simple Summary for Layman (show first if available)
+            if (simpleSummary) {
+                findingsHTML += `
+                    <div class="finding-item" style="background: linear-gradient(135deg, var(--surface-2), var(--surface-3)); border-left: 3px solid var(--accent); margin-bottom: 16px; padding: 16px;">
+                        <div style="display: flex; align-items: flex-start; gap: 12px;">
+                            <span class="finding-icon" style="color: var(--accent); font-size: 18px;"><i class="fas fa-lightbulb"></i></span>
+                            <div>
+                                <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 8px; font-weight: 600;">What This Means (Simple Explanation)</div>
+                                <span class="finding-text" style="font-size: 14px; line-height: 1.6;">${simpleSummary}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Risk level indicator
+            const riskClass = riskLevel === 'low' ? 'success' : riskLevel === 'medium' ? '' : 'danger';
+            const riskIcon = riskLevel === 'low' ? 'check' : riskLevel === 'medium' ? 'exclamation' : 'times';
+            findingsHTML += `
+                <div class="finding-item ${riskClass}">
+                    <span class="finding-icon ${riskClass}"><i class="fas fa-${riskIcon}"></i></span>
+                    <span class="finding-text"><strong>${riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)} Risk:</strong> ${analysis.risk_description || 'Analysis complete.'}</span>
+                </div>
+            `;
+            
+            // Key Findings with Simple Explanations
+            if (keyFindings.length > 0) {
+                findingsHTML += `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;"><i class="fas fa-search"></i> Key Findings</div>`;
+                
+                keyFindings.slice(0, 5).forEach(finding => {
+                    const statusClass = finding.status === 'supported' ? 'success' : finding.status === 'unsupported' ? 'danger' : '';
+                    const statusIcon = finding.status === 'supported' ? 'check-circle' : finding.status === 'unsupported' ? 'times-circle' : 'question-circle';
+                    const statusLabel = finding.status === 'supported' ? '✓ Looks Good' : finding.status === 'unsupported' ? '✗ Needs Checking' : '? Uncertain';
+                    
+                    findingsHTML += `
+                        <div class="finding-item ${statusClass}" style="margin-bottom: 12px; padding: 14px;">
+                            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="finding-icon ${statusClass}"><i class="fas fa-${statusIcon}"></i></span>
+                                    <span style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: ${statusClass === 'success' ? 'var(--accent-dim)' : statusClass === 'danger' ? 'rgba(255,71,87,0.1)' : 'rgba(255,165,2,0.1)'}; color: ${statusClass === 'success' ? 'var(--accent)' : statusClass === 'danger' ? 'var(--danger)' : 'var(--warning)'};">${statusLabel}</span>
+                                </div>
+                                <div class="finding-text" style="font-size: 13px; color: var(--text);">"${finding.claim}"</div>
+                                ${finding.simple_explanation ? `
+                                    <div style="background: var(--bg); padding: 10px 12px; border-radius: 6px; margin-top: 4px;">
+                                        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 4px;"><i class="fas fa-info-circle"></i> In Simple Terms</div>
+                                        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">${finding.simple_explanation}</div>
+                                    </div>
+                                ` : ''}
+                                ${finding.concern && finding.status !== 'supported' ? `<div style="font-size: 11px; color: var(--text-muted); font-style: italic;"><i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i> ${finding.concern}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                findingsHTML += '</div>';
+            }
+            
+            // Recommendations
+            if (recommendations.length > 0) {
+                findingsHTML += `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;"><i class="fas fa-clipboard-list"></i> Recommendations</div>`;
+                
+                recommendations.forEach(rec => {
+                    const isPositive = rec.toLowerCase().includes('no major') || rec.toLowerCase().includes('complete') || rec.toLowerCase().includes('appear');
+                    findingsHTML += `
+                        <div class="finding-item ${isPositive ? 'success' : ''}">
+                            <span class="finding-icon ${isPositive ? 'success' : 'warning'}"><i class="fas fa-${isPositive ? 'check' : 'exclamation'}"></i></span>
+                            <span class="finding-text">${rec}</span>
+                        </div>
+                    `;
+                });
+                
+                findingsHTML += '</div>';
+            }
+            
+            // Flagged sentences with simple explanations (show first 3)
+            if (flaggedSentences.length > 0) {
+                findingsHTML += `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;"><i class="fas fa-flag"></i> Flagged Sentences</div>`;
+                
+                flaggedSentences.slice(0, 3).forEach(item => {
+                    const sentence = item.sentence.length > 120 ? item.sentence.substring(0, 120) + '...' : item.sentence;
+                    const simpleExplanation = item.simple_explanation || '';
+                    const suggestion = item.suggestion || '';
+                    
+                    findingsHTML += `
+                        <div class="finding-item danger" style="margin-bottom: 12px; padding: 14px;">
+                            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="finding-icon warning"><i class="fas fa-flag"></i></span>
+                                    <span style="font-size: 11px; color: var(--text-muted);">Confidence: ${item.score}%</span>
+                                </div>
+                                <div class="finding-text" style="font-size: 13px; font-style: italic; color: var(--text);">"${sentence}"</div>
+                                ${simpleExplanation ? `
+                                    <div style="background: var(--bg); padding: 10px 12px; border-radius: 6px; margin-top: 4px;">
+                                        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--warning); margin-bottom: 4px;"><i class="fas fa-lightbulb"></i> Why This Is Flagged</div>
+                                        <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5;">${simpleExplanation}</div>
+                                    </div>
+                                ` : ''}
+                                ${suggestion ? `
+                                    <div style="font-size: 11px; color: var(--accent); margin-top: 4px;"><i class="fas fa-arrow-right"></i> <strong>What to do:</strong> ${suggestion}</div>
+                                ` : ''}
+                                ${!simpleExplanation && item.issues.length > 0 ? `<div style="font-size: 11px; color: var(--text-muted);">Issues: ${item.issues.join(', ')}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                findingsHTML += '</div>';
+            }
+            
+            findingsList.innerHTML = findingsHTML;
+        }
+
+        // Update UI with Fact Verification results
+        function updateFactVerificationResults(data) {
+            const score = data.verification_score || data.trust_score || 0;
+            const isHigh = score >= 80;
+            const isMedium = score >= 50 && score < 80;
+            const metrics = data.metrics || {};
+            const analysis = data.analysis || {};
+            
+            // Update score display
+            scoreValue.textContent = score;
+            scoreValue.className = 'score-value ' + (isHigh ? 'high' : isMedium ? 'medium' : 'low');
+            scoreBadge.textContent = isHigh ? 'Verified' : isMedium ? 'Partially Verified' : 'Needs Review';
+            scoreBadge.className = 'result-badge ' + (isHigh ? 'high' : isMedium ? 'medium' : 'low');
+
+            // Update metrics for fact verification
+            metricsList.innerHTML = `
+                <div class="metric-item">
+                    <span class="metric-label">Fact Score</span>
+                    <span class="metric-value" style="color: var(--accent);">${metrics.fact_score || score}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Claim Density</span>
+                    <span class="metric-value">${metrics.claim_density || 0}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Source Quality</span>
+                    <span class="metric-value" style="color: ${metrics.source_quality >= 70 ? 'var(--accent)' : 'var(--warning)'};">${metrics.source_quality || '--'}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Verification Rate</span>
+                    <span class="metric-value">${metrics.verification_rate || 0}%</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Total Claims</span>
+                    <span class="metric-value">${analysis.total_claims || 0} found</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-label">Verified / Unverified</span>
+                    <span class="metric-value" style="color: ${analysis.unverified_count > 0 ? 'var(--warning)' : 'var(--accent)'};">${analysis.verified_count || 0} / ${analysis.unverified_count || 0}</span>
+                </div>
+            `;
+
+            // Update findings
+            const recommendations = data.recommendations || [];
+            const claims = data.claims || [];
+            const verifications = data.verifications || [];
+            const misleadingPatterns = data.misleading_patterns || [];
+            const riskLevel = analysis.overall_risk || data.status || 'unknown';
+            
+            let findingsHTML = '';
+            
+            // Status indicator
+            const statusClass = data.status === 'high_confidence' ? 'success' : data.status === 'medium_confidence' ? '' : 'danger';
+            const statusIcon = data.status === 'high_confidence' ? 'check-circle' : data.status === 'medium_confidence' ? 'exclamation-circle' : 'times-circle';
+            findingsHTML += `
+                <div class="finding-item ${statusClass}">
+                    <span class="finding-icon ${statusClass}"><i class="fas fa-${statusIcon}"></i></span>
+                    <span class="finding-text"><strong>Verification Status:</strong> ${data.description || 'Analysis complete.'}</span>
+                </div>
+            `;
+            
+            // Show verified facts with source links
+            if (verifications.length > 0) {
+                findingsHTML += `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;"><i class="fas fa-check-double"></i> Verified Facts</div>`;
+                
+                verifications.forEach(v => {
+                    const verifiedClass = v.verified ? 'success' : 'danger';
+                    const verifiedIcon = v.verified ? 'check' : 'times';
+                    const typeIcon = v.claim_type === 'geography' ? 'globe' : v.claim_type === 'historical' ? 'history' : 'flask';
+                    
+                    // Build source link HTML with proper class
+                    let sourceHTML = '';
+                    if (v.source) {
+                        if (v.source_url) {
+                            sourceHTML = `<a href="${v.source_url}" target="_blank" rel="noopener noreferrer" class="source-link" onclick="window.open('${v.source_url}', '_blank'); return false;"><i class="fas fa-external-link-alt" style="font-size: 10px;"></i> ${v.source}</a>`;
+                        } else {
+                            sourceHTML = `<span style="color: var(--text-muted);">${v.source}</span>`;
+                        }
+                    }
+                    
+                    findingsHTML += `
+                        <div class="finding-item ${verifiedClass}" style="margin-bottom: 12px; padding: 12px; background: var(--surface); border-radius: 8px;">
+                            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                                <span class="finding-icon ${verifiedClass}" style="flex-shrink: 0;"><i class="fas fa-${verifiedIcon}"></i></span>
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                        <i class="fas fa-${typeIcon}" style="font-size: 10px; color: var(--text-muted);"></i>
+                                        <span style="font-size: 10px; text-transform: uppercase; color: var(--text-muted);">${v.claim_type || 'fact'}</span>
+                                    </div>
+                                    <div class="finding-text" style="margin-bottom: 6px;">${v.claim}</div>
+                                    ${v.correct_answer ? `<div style="color: var(--danger); font-size: 12px; margin-bottom: 6px;"><i class="fas fa-arrow-right"></i> Correct: <strong>${v.correct_answer}</strong></div>` : ''}
+                                    ${v.source ? `<div style="font-size: 11px; display: flex; align-items: center; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);"><i class="fas fa-book" style="color: var(--text-muted);"></i> <span>Source:</span> ${sourceHTML}</div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                findingsHTML += '</div>';
+            }
+            
+            // Show misleading patterns
+            if (misleadingPatterns.length > 0) {
+                findingsHTML += `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--warning); margin-bottom: 12px;"><i class="fas fa-exclamation-triangle"></i> Misleading Patterns</div>`;
+                
+                misleadingPatterns.forEach(p => {
+                    findingsHTML += `
+                        <div class="finding-item" style="margin-bottom: 8px;">
+                            <span class="finding-icon warning"><i class="fas fa-exclamation"></i></span>
+                            <span class="finding-text">"${p.pattern}" - ${p.warning}</span>
+                        </div>
+                    `;
+                });
+                findingsHTML += '</div>';
+            }
+            
+            // Show extracted claims summary
+            if (claims.length > 0) {
+                const claimTypes = analysis.claim_types || {};
+                findingsHTML += `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;"><i class="fas fa-list"></i> Claim Types Found</div>`;
+                
+                for (const [type, count] of Object.entries(claimTypes)) {
+                    const typeIcon = type === 'dates' ? 'calendar' : type === 'statistics' ? 'percentage' : type === 'quotes' ? 'quote-left' : type === 'numbers' ? 'hashtag' : 'tag';
+                    findingsHTML += `
+                        <div class="finding-item" style="margin-bottom: 8px;">
+                            <span class="finding-icon"><i class="fas fa-${typeIcon}"></i></span>
+                            <span class="finding-text"><strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${count} found</span>
+                        </div>
+                    `;
+                }
+                findingsHTML += '</div>';
+            }
+            
+            // Recommendations
+            if (recommendations.length > 0) {
+                findingsHTML += `<div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 12px;"><i class="fas fa-clipboard-check"></i> Recommendations</div>`;
+                
+                recommendations.forEach(rec => {
+                    const priorityClass = rec.priority === 'critical' ? 'danger' : rec.priority === 'high' ? 'warning' : 'success';
+                    const priorityIcon = rec.priority === 'critical' ? 'exclamation-circle' : rec.priority === 'high' ? 'exclamation' : rec.priority === 'low' ? 'check' : 'info-circle';
+                    findingsHTML += `
+                        <div class="finding-item ${priorityClass === 'warning' ? '' : priorityClass}" style="margin-bottom: 8px;">
+                            <span class="finding-icon ${priorityClass}"><i class="fas fa-${priorityIcon}"></i></span>
+                            <span class="finding-text">${rec.action} <span style="font-size: 10px; background: var(--surface-hover); padding: 2px 6px; border-radius: 10px; margin-left: 8px;">${rec.priority}</span></span>
+                        </div>
+                    `;
+                });
+                findingsHTML += '</div>';
+            }
+            
+            findingsList.innerHTML = findingsHTML || '<div class="empty-state"><i class="fas fa-check-circle"></i><p>No issues found</p></div>';
+        }
+
+        // Show error state
+        function showError(message) {
+            scoreValue.textContent = '--';
+            scoreValue.className = 'score-value';
+            scoreBadge.textContent = 'Error';
+            scoreBadge.className = 'result-badge low';
+            
+            metricsList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                    <p>${message}</p>
+                </div>
+            `;
+            
+            findingsList.innerHTML = `
+                <div class="finding-item danger">
+                    <span class="finding-icon danger"><i class="fas fa-times"></i></span>
+                    <span class="finding-text">${message}</span>
+                </div>
+                <div class="finding-item">
+                    <span class="finding-icon warning"><i class="fas fa-info-circle"></i></span>
+                    <span class="finding-text">Make sure the backend server is running on port 5001. Run: <code style="background: var(--bg); padding: 2px 6px; border-radius: 4px;">python backend/server.py</code></span>
+                </div>
+            `;
+        }
+
+        // Analyze button click handler
+        analyzeBtn.addEventListener('click', async () => {
+            const text = textInput.value.trim();
+            
+            if (!text) {
+                alert('Please enter some text to analyze');
+                return;
+            }
+            
+            if (text.length < 50) {
+                alert('Please enter at least 50 characters for accurate analysis');
+                return;
+            }
+
+            // Show loading state
+            analyzeBtn.classList.add('analyzing');
+            analyzeBtn.disabled = true;
+            
+            // Reset displays
+            scoreValue.textContent = '...';
+            metricsList.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Analyzing text...</p></div>';
+            findingsList.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Detecting hallucinations...</p></div>';
+
+            try {
+                // Determine which analysis type to use
+                const isFactCheck = document.getElementById('optFact')?.checked;
+                const isHallucination = document.getElementById('optHallucination')?.checked;
+                
+                // Build request body with analysis type
+                const requestBody = {
+                    text: text,
+                    options: {
+                        type: isFactCheck ? 'fact-verification' : 'hallucination',
+                        hallucination: isHallucination ?? true,
+                        ai_detection: document.getElementById('optAI')?.checked ?? true,
+                        fact_check: isFactCheck ?? false,
+                        bias_detection: document.getElementById('optBias')?.checked ?? false
+                    }
+                };
+                
+                // Choose endpoint based on analysis type
+                const endpoint = isFactCheck ? '/api/analyze/fact-verification' : '/api/analyze';
+                
+                const response = await fetch(`${API_URL}${endpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (isFactCheck) {
+                        updateFactVerificationResults(data);
+                    } else {
+                        updateResults(data);
+                    }
+                    
+                    // Save to history
+                    saveToHistory(text, data, isFactCheck ? 'Fact Verification' : 'Hallucination Detection');
+                } else {
+                    showError(data.error || 'Analysis failed');
+                }
+            } catch (error) {
+                console.error('API Error:', error);
+                showError('Could not connect to analysis server. Make sure the backend is running.');
+            } finally {
+                // Reset button
+                analyzeBtn.classList.remove('analyzing');
+                analyzeBtn.disabled = false;
+            }
+        });
+
+        // Check if server is running on page load
+        (async function checkServer() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    console.log('✓ TrustGuard API server is running');
+                }
+            } catch (e) {
+                console.warn('⚠ Backend server not detected. Start it with: python backend/server.py');
+            }
+        })();
+        
+        // Save analysis result to history
+        async function saveToHistory(text, data, analysisType) {
+            try {
+                const analysis = data.analysis || data;
+                const trustScore = analysis.trust_score || analysis.fact_score || 50;
+                const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+                
+                // Count issues found
+                let issuesFound = 0;
+                if (analysis.hallucinations) issuesFound += analysis.hallucinations.length;
+                if (analysis.verifications) {
+                    issuesFound += analysis.verifications.filter(v => !v.verified).length;
+                }
+                if (analysis.misleading_patterns) issuesFound += analysis.misleading_patterns.length;
+                
+                // Create title from first part of text
+                const title = text.substring(0, 60).replace(/\s+/g, ' ').trim() + (text.length > 60 ? '...' : '');
+                
+                const historyEntry = {
+                    title: title,
+                    content_type: 'text',
+                    analysis_type: analysisType,
+                    trust_score: Math.round(trustScore),
+                    word_count: wordCount,
+                    issues_found: issuesFound,
+                    method: analysis.method || 'heuristic',
+                    full_text: text.substring(0, 500) // Store first 500 chars
+                };
+                
+                await fetch(`${API_URL}/api/history`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(historyEntry)
+                });
+                
+                console.log('✓ Analysis saved to history');
+            } catch (error) {
+                console.warn('Could not save to history:', error);
+            }
+        }
+    </script>
+</body>
+</html>
