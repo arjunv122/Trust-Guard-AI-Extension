@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TrustGuard AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <svg width="28" height="28" viewBox="0 0 40 40" fill="none">
+          <path d="M20 4L34 10V20C34 28 20 36 20 36S6 28 6 20V10L20 4Z" fill="#00d26a"/>
+          <path d="M14 20L18 24L26 16" stroke="#000000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        <span>TrustGuard</span>
+      </div>
+      <span class="version">v2.0</span>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      
+      <!-- Initial State -->
+      <section id="initial-state" class="state">
+        <div class="welcome-icon">
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#00d26a" stroke-width="1.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <h2>Verify Content Trust</h2>
+        <p>Paste text, enter a URL, or scan the current page</p>
+        
+        <div class="input-group">
+          <textarea id="input-text" placeholder="Paste text or URL to analyze..."></textarea>
+          <button id="btn-analyze" class="btn btn-primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span>Analyze Trust</span>
+          </button>
+        </div>
+        
+        <div class="divider"><span>or</span></div>
+        
+        <button id="btn-scan-page" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <span>Scan Current Page</span>
+        </button>
+      </section>
+
+      <!-- Loading State -->
+      <section id="loading-state" class="state" style="display:none;">
+        <div class="loader">
+          <div class="spinner"></div>
+        </div>
+        <h3>Analyzing Content...</h3>
+        <p id="loading-text">Connecting to AI models</p>
+        <div class="progress-bar">
+          <div id="progress" class="progress"></div>
+        </div>
+      </section>
+
+      <!-- Results State -->
+      <section id="results-state" class="state" style="display:none;">
+        
+        <!-- Score Card -->
+        <div class="score-card">
+          <div class="score-circle">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="45"/>
+              <circle id="score-ring" cx="50" cy="50" r="45" 
+                      stroke-dasharray="283" stroke-dashoffset="283"/>
+            </svg>
+            <div class="score-text">
+              <span id="score-value">0</span>
+              <span class="score-label">Trust Score</span>
+            </div>
+          </div>
+          <div id="verdict" class="verdict high">HIGH TRUST</div>
+        </div>
+
+        <!-- AI Detection Alert -->
+        <div id="ai-alert" class="alert alert-warning" style="display:none;">
+          <span>🤖</span>
+          <span id="ai-alert-text">AI-generated content detected</span>
+        </div>
+
+        <!-- Analysis Notice -->
+        <div id="analysis-notice" class="notice" style="display:none;">
+          <span id="notice-text"></span>
+        </div>
+
+        <!-- Pillars -->
+        <div class="pillars">
+          
+          <!-- Information Trust -->
+          <div id="pillar-info" class="pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-icon">📝</span>
+              <span class="pillar-name">Information Trust</span>
+              <span id="info-score" class="pillar-score">--</span>
+            </div>
+            <div id="info-details" class="pillar-details"></div>
+          </div>
+
+          <!-- Media Trust -->
+          <div id="pillar-media" class="pillar-card">
+            <div class="pillar-header">
+              <span class="pillar-icon">🖼️</span>
+              <span class="pillar-name">Media Trust</span>
+              <span id="media-score" class="pillar-score">--</span>
+            </div>
+            <div id="media-details" class="pillar-details"></div>
+          </div>
+        </div>
+
+        <!-- Findings -->
+        <div id="findings-section" class="findings" style="display:none;">
+          <h4>Key Findings</h4>
+          <div id="findings-list"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+          <button id="btn-new" class="btn btn-primary">
+            <span>New Analysis</span>
+          </button>
+          <button id="btn-view-report" class="btn btn-secondary" style="display:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            <span>View Full Report</span>
+          </button>
+          <button id="btn-highlight" class="btn btn-secondary" style="display:none;">
+            <span>🔍 Highlight Issues</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

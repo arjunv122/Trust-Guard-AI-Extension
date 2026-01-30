@@ -13,6 +13,10 @@ import os
 import json
 from datetime import datetime
 import uuid
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -1217,43 +1221,6 @@ def get_config():
     }), 200
 
 
-@app.route('/api/analyze', methods=['POST'])
-def analyze_text():
-    """Main analysis endpoint - routes to appropriate analyzer based on options"""
-    try:
-        data = request.get_json()
-        
-        if not data:
-            return jsonify({'success': False, 'error': 'No JSON data provided'}), 400
-        
-        text = data.get('text', '')
-        options = data.get('options', {})
-        analysis_type = options.get('type', 'hallucination')
-        use_llm = options.get('use_llm', True)  # Default to LLM if available
-        
-        # Route to appropriate analyzer
-        if analysis_type == 'fact-verification':
-            result = fact_verifier.verify_facts(text)
-        elif analysis_type == 'hallucination' and use_llm and llm_detector.is_configured():
-            # Use LLM-based SelfCheckGPT approach
-            result = llm_detector.detect_hallucination(text)
-        else:
-            # Fallback to heuristic detection
-            result = detector.detect_hallucination(text)
-        
-        if not result['success']:
-            return jsonify(result), 400
-        
-        return jsonify(result), 200
-        
-    except Exception as e:
-        logger.error(f"Analysis error: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': f'Analysis failed: {str(e)}'
-        }), 500
-
-
 @app.route('/api/analyze/hallucination', methods=['POST'])
 def analyze_hallucination():
     """Dedicated hallucination detection endpoint - uses LLM if available"""
@@ -1676,6 +1643,328 @@ def analyze_urls_batch():
             'success': False,
             'error': str(e)
         }), 500
+
+
+# ============================================
+# Extension Integration Endpoints
+# ============================================
+
+@app.route('/api/analyze', methods=['POST'])
+def extension_analyze():
+    """
+    Main analysis endpoint - handles both dashboard and extension formats
+    Dashboard format: {text: "...", options: {...}}
+    Extension format: {content_type: "text", text: "..."}
+    """
+    try:
+        data = request.get_json()
+        
+        # Detect which format is being used
+        # Dashboard sends 'options', extension sends 'content_type'
+        is_dashboard_format = 'options' in data or ('text' in data and 'content_type' not in data)
+        
+        if is_dashboard_format:
+            # Handle DASHBOARD format
+            text = data.get('text', '')
+            options = data.get('options', {})
+            analysis_type = options.get('type', 'hallucination')
+            use_llm = options.get('use_llm', True)
+            
+            # Route to appropriate analyzer
+            if analysis_type == 'fact-verification':
+                result = fact_verifier.verify_facts(text)
+            elif analysis_type == 'hallucination' and use_llm and llm_detector.is_configured():
+                result = llm_detector.detect_hallucination(text)
+            else:
+                result = detector.detect_hallucination(text)
+            
+            if not result.get('success'):
+                return jsonify(result), 400
+            
+            return jsonify(result), 200
+        
+        # Handle EXTENSION format
+        content_type = data.get('content_type', 'text')
+        
+        # Initialize result structure matching extension expectations
+        result = {
+            'overall_score': 50,
+            'verdict': 'ANALYZING',
+            'confidence': 0.5,
+            'pillars': {
+                'information_trust': {
+                    'score': None,
+                    'applicable': False,
+                    'reason': 'No text content',
+                    'details': None
+                },
+                'media_trust': {
+                    'score': None,
+                    'applicable': False,
+                    'reason': 'No media content',
+                    'details': None
+                }
+            },
+            'applicable_pillars': [],
+            'findings': [],
+            'ai_content_detected': False,
+            'suspicious_segments': [],
+            'report_id': str(uuid.uuid4())
+        }
+        
+        # Handle text content
+        if content_type == 'text' and data.get('text'):
+            text = data.get('text', '')[:10000]
+            
+            # Use our hallucination detector
+            analysis = detector.detect_hallucination(text)
+            
+            # Calculate trust score (handle both success wrapper and direct result)
+            if analysis.get('success') and 'result' in analysis:
+                result_data = analysis['result']
+            else:
+                result_data = analysis
+            
+            trust_score = 100 - int(result_data.get('hallucination_score', 0))
+            
+            result['overall_score'] = trust_score
+            result['verdict'] = 'HIGH TRUST' if trust_score >= 70 else ('MODERATE TRUST' if trust_score >= 40 else 'LOW TRUST')
+            result['applicable_pillars'].append('information_trust')
+            
+            result['pillars']['information_trust'] = {
+                'score': trust_score,
+                'applicable': True,
+                'details': {
+                    'ai_detection': {
+                        'is_ai_generated': result_data.get('ai_likelihood', 0) > 50,
+                        'confidence': result_data.get('ai_likelihood', 0) / 100,
+                        'message': 'AI-generated content detected' if result_data.get('ai_likelihood', 0) > 50 else 'Content appears human-written'
+                    },
+                    'fact_check': {
+                        'total_claims': len(result_data.get('flagged_sentences', [])),
+                        'verified_claims': 0,
+                        'message': f"Found {len(result_data.get('flagged_sentences', []))} potential issues"
+                    },
+                    'sources': {
+                        'found': 0,
+                        'credible': 0
+                    }
+                }
+            }
+            
+            # Build findings
+            for sentence in result_data.get('flagged_sentences', [])[:5]:
+                result['findings'].append({
+                    'type': 'warning' if sentence.get('confidence', 0) < 80 else 'error',
+                    'pillar': 'information_trust',
+                    'message': sentence.get('simple_explanation', sentence.get('reason', 'Potential issue detected'))
+                })
+            
+            if result_data.get('ai_likelihood', 0) > 50:
+                result['ai_content_detected'] = True
+                result['findings'].insert(0, {
+                    'type': 'warning',
+                    'pillar': 'information_trust',
+                    'message': 'This text may be AI-generated'
+                })
+            
+            result['suspicious_segments'] = [s.get('sentence', '') for s in result_data.get('flagged_sentences', [])[:10]]
+        
+        # Handle URL content
+        elif content_type == 'url' and data.get('url'):
+            url = data.get('url', '')
+            
+            from url_phishing_detector import url_detector
+            url_result = url_detector.analyze_url(url)
+            
+            trust_score = url_result.get('trust_score', 50)
+            result['overall_score'] = trust_score
+            result['verdict'] = 'HIGH TRUST' if trust_score >= 70 else ('MODERATE TRUST' if trust_score >= 40 else 'LOW TRUST')
+            result['applicable_pillars'].append('url_trust')
+            
+            for rf in url_result.get('risk_factors', [])[:5]:
+                result['findings'].append({
+                    'type': 'error' if rf.get('severity') == 'high' else 'warning',
+                    'pillar': 'url_trust',
+                    'message': rf.get('simple', rf.get('description', 'Risk detected'))
+                })
+        
+        # Handle page scan
+        elif content_type == 'page' and data.get('page_data'):
+            page_data = data.get('page_data', {})
+            text = page_data.get('text', '')[:10000]
+            images = page_data.get('images', [])
+            url = page_data.get('url', '')
+            
+            # Analyze text if present
+            if text and len(text) > 50:
+                analysis_result = detector.detect_hallucination(text)
+                # Handle both success wrapper and direct result
+                if analysis_result.get('success') and 'result' in analysis_result:
+                    analysis = analysis_result['result']
+                else:
+                    analysis = analysis_result
+                    
+                text_score = 100 - int(analysis.get('hallucination_score', 0))
+                
+                result['applicable_pillars'].append('information_trust')
+                result['pillars']['information_trust'] = {
+                    'score': text_score,
+                    'applicable': True,
+                    'details': {
+                        'ai_detection': {
+                            'is_ai_generated': analysis.get('ai_likelihood', 0) > 50,
+                            'confidence': analysis.get('ai_likelihood', 0) / 100,
+                            'message': 'AI content detected' if analysis.get('ai_likelihood', 0) > 50 else 'Content appears authentic'
+                        }
+                    }
+                }
+                
+                for sentence in analysis.get('flagged_sentences', [])[:3]:
+                    result['findings'].append({
+                        'type': 'warning',
+                        'pillar': 'information_trust',
+                        'message': sentence.get('simple_explanation', sentence.get('reason', 'Issue detected'))
+                    })
+                
+                if analysis.get('ai_likelihood', 0) > 50:
+                    result['ai_content_detected'] = True
+            
+            # Analyze images if present
+            if images:
+                try:
+                    from media_analyzer import media_analyzer
+                    img_results = []
+                    ai_count = 0
+                    
+                    for img_url in images[:5]:
+                        img_result = media_analyzer.analyze_image_url(img_url)
+                        if img_result.get('success'):
+                            img_results.append(img_result)
+                            if img_result.get('ai_probability', 0) > 50:
+                                ai_count += 1
+                    
+                    if img_results:
+                        media_score = 100 - (ai_count / len(img_results) * 60)
+                        result['applicable_pillars'].append('media_trust')
+                        result['pillars']['media_trust'] = {
+                            'score': int(media_score),
+                            'applicable': True,
+                            'details': {
+                                'images': {
+                                    'total': len(images),
+                                    'analyzed': len(img_results),
+                                    'ai_generated_count': ai_count,
+                                    'results': img_results,
+                                    'message': f'{ai_count} AI-generated images detected' if ai_count > 0 else 'Images appear authentic'
+                                }
+                            }
+                        }
+                        
+                        if ai_count > 0:
+                            result['findings'].append({
+                                'type': 'warning',
+                                'pillar': 'media_trust',
+                                'message': f'{ai_count} image(s) appear to be AI-generated'
+                            })
+                except Exception as e:
+                    logger.error(f"Media analysis error: {e}")
+            
+            # Calculate overall score
+            scores = []
+            if result['pillars']['information_trust'].get('score'):
+                scores.append(result['pillars']['information_trust']['score'])
+            if result['pillars']['media_trust'].get('score'):
+                scores.append(result['pillars']['media_trust']['score'])
+            
+            if scores:
+                result['overall_score'] = int(sum(scores) / len(scores))
+                result['verdict'] = 'HIGH TRUST' if result['overall_score'] >= 70 else ('MODERATE TRUST' if result['overall_score'] >= 40 else 'LOW TRUST')
+        
+        # Add success finding if no issues
+        if not result['findings']:
+            result['findings'].append({
+                'type': 'success',
+                'pillar': 'general',
+                'message': 'No significant issues detected'
+            })
+        
+        # Save to history
+        history_entry = {
+            'type': content_type,
+            'content': data.get('text', data.get('url', 'Page scan'))[:100],
+            'trust_score': result['overall_score'],
+            'status': result['verdict'].lower().replace(' ', '-'),
+            'title': f"Extension: {content_type.title()} Analysis",
+            'report_id': result['report_id']
+        }
+        add_to_history(history_entry)
+        
+        return jsonify(result), 200
+        
+    except Exception as e:
+        logger.error(f"Extension analyze error: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'overall_score': 0,
+            'verdict': 'ERROR',
+            'findings': [{'type': 'error', 'message': str(e)}]
+        }), 500
+
+
+@app.route('/api/analyze-images', methods=['POST'])
+def extension_analyze_images():
+    """Analyze images from URLs - extension compatible"""
+    try:
+        from media_analyzer import media_analyzer
+        
+        data = request.get_json()
+        image_urls = data.get('image_urls', [])
+        
+        if not image_urls:
+            return jsonify({'success': False, 'error': 'No image URLs provided'}), 400
+        
+        results = []
+        for url in image_urls[:10]:
+            result = media_analyzer.analyze_image_url(url)
+            results.append({
+                'url': url,
+                'is_ai_generated': result.get('ai_probability', 0) > 50,
+                'confidence': result.get('ai_probability', 0) / 100,
+                'details': result
+            })
+        
+        return jsonify({
+            'success': True,
+            'results': results
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Image analysis error: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/report/<report_id>', methods=['GET'])
+def get_report(report_id):
+    """Get full report by ID for dashboard deep link"""
+    try:
+        history = load_history()
+        
+        for entry in history:
+            if entry.get('report_id') == report_id:
+                return jsonify({
+                    'success': True,
+                    'report': entry
+                }), 200
+        
+        return jsonify({
+            'success': False,
+            'error': 'Report not found'
+        }), 404
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 if __name__ == '__main__':

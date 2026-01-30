@@ -1,6 +1,3 @@
-# Extension folder (separate project)
-extension/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -12,9 +9,10 @@ venv/
 ENV/
 env/
 
-# Environment variables
+# Environment variables (contains API keys)
 .env
 *.env
+backend/.env
 
 # IDE
 .vscode/

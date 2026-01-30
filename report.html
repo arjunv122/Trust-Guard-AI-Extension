@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustGuard AI - Analysis Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #0a0a0a;
+            --surface: #141414;
+            --surface-2: #1a1a1a;
+            --border: #2a2a2a;
+            --text: #fafafa;
+            --text-muted: #888;
+            --accent: #00ff88;
+            --accent-dim: rgba(0, 255, 136, 0.1);
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --success: #00d26a;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text);
+        }
+
+        .logo-mark {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--bg);
+        }
+
+        .logo span {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--surface-2);
+            border-color: var(--accent);
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .error-icon {
+            font-size: 48px;
+            color: var(--danger);
+            margin-bottom: 20px;
+        }
+
+        /* Report Content */
+        .report {
+            display: none;
+        }
+
+        .report.visible {
+            display: block;
+        }
+
+        /* Score Card */
+        .score-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-circle {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 24px;
+            position: relative;
+        }
+
+        .score-circle svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .score-circle circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .score-circle .bg {
+            stroke: var(--border);
+        }
+
+        .score-circle .progress {
+            stroke: var(--accent);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .score-value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .score-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .verdict {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .verdict.high { color: var(--success); }
+        .verdict.moderate { color: var(--warning); }
+        .verdict.low { color: var(--danger); }
+
+        .report-date {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* Details Section */
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: var(--accent);
+        }
+
+        /* Findings List */
+        .findings-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .finding {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 10px;
+            border-left: 3px solid var(--border);
+        }
+
+        .finding.success { border-left-color: var(--success); }
+        .finding.warning { border-left-color: var(--warning); }
+        .finding.error { border-left-color: var(--danger); }
+        .finding.info { border-left-color: #6495ed; }
+
+        .finding-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .finding.success .finding-icon { background: rgba(0, 210, 106, 0.2); color: var(--success); }
+        .finding.warning .finding-icon { background: rgba(255, 165, 2, 0.2); color: var(--warning); }
+        .finding.error .finding-icon { background: rgba(255, 71, 87, 0.2); color: var(--danger); }
+        .finding.info .finding-icon { background: rgba(100, 149, 237, 0.2); color: #6495ed; }
+
+        .finding-content {
+            flex: 1;
+        }
+
+        .finding-pillar {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .finding-message {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Pillars Grid */
+        .pillars-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .pillar-card {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .pillar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .pillar-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .pillar-score {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .pillar-score.na {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .pillar-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .pillar-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        /* Analyzed Content */
+        .content-preview {
+            background: var(--bg);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: var(--text-muted);
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+        }
+
+        .action-btn.primary {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: var(--surface);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .action-btn.secondary:hover {
+            border-color: var(--accent);
+        }
+
+        /* Extension Badge */
+        .extension-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--accent-dim);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--accent);
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <a href="index.html" class="logo">
+                <div class="logo-mark">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <span>TrustGuard AI</span>
+            </a>
+            <a href="index.html" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </header>
+
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="spinner"></div>
+            <p style="color: var(--text-muted);">Loading report...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error" id="errorState" style="display: none;">
+            <div class="error-icon"><i class="fas fa-exclamation-triangle"></i></div>
+            <h2 style="margin-bottom: 12px;">Report Not Found</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px;">The requested report could not be found or has expired.</p>
+            <a href="index.html" class="action-btn primary">
+                <i class="fas fa-home"></i>
+                Go to Dashboard
+            </a>
+        </div>
+
+        <!-- Report Content -->
+        <div class="report" id="reportContent">
+            <div class="extension-badge">
+                <i class="fas fa-puzzle-piece"></i>
+                <span>From TrustGuard Extension</span>
+            </div>
+
+            <!-- Score Card -->
+            <div class="score-card">
+                <div class="score-circle">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="bg" cx="50" cy="50" r="45"/>
+                        <circle class="progress" id="scoreRing" cx="50" cy="50" r="45" 
+                                stroke-dasharray="283" stroke-dashoffset="283"/>
+                    </svg>
+                    <div class="score-value">
+                        <div class="score-number" id="scoreValue">0</div>
+                        <div class="score-label">Trust Score</div>
+                    </div>
+                </div>
+                <div class="verdict" id="verdictText">ANALYZING</div>
+                <div class="report-date" id="reportDate">--</div>
+            </div>
+
+            <!-- Findings Section -->
+            <div class="section">
+                <h3 class="section-title">
+                    <i class="fas fa-clipboard-list"></i>
+                    Analysis Findings
+                </h3>
+                <div class="findings-list" id="findingsList">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Pillars Section -->
+            <div class="section">
+                <h3 class="section-title">
+                    <i class="fas fa-chart-pie"></i>
+                    Trust Pillars
+                </h3>
+                <div class="pillars-grid" id="pillarsGrid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Analyzed Content -->
+            <div class="section">
+                <h3 class="section-title">
+                    <i class="fas fa-file-alt"></i>
+                    Analyzed Content
+                </h3>
+                <div class="content-preview" id="contentPreview">
+                    No content available
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <a href="analyze-text.html" class="action-btn primary">
+                    <i class="fas fa-redo"></i>
+                    Analyze New Content
+                </a>
+                <button class="action-btn secondary" onclick="window.print()">
+                    <i class="fas fa-print"></i>
+                    Print Report
+                </button>
+                <a href="history.html" class="action-btn secondary">
+                    <i class="fas fa-history"></i>
+                    View History
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5001';
+
+        // Get report ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const reportId = urlParams.get('id');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (reportId) {
+                loadReport(reportId);
+            } else {
+                showError();
+            }
+        });
+
+        async function loadReport(id) {
+            try {
+                const response = await fetch(`${API_URL}/api/report/${id}`);
+                
+                if (!response.ok) {
+                    throw new Error('Report not found');
+                }
+
+                const data = await response.json();
+                
+                if (data.success && data.report) {
+                    displayReport(data.report);
+                } else {
+                    showError();
+                }
+            } catch (error) {
+                console.error('Error loading report:', error);
+                showError();
+            }
+        }
+
+        function displayReport(report) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('reportContent').classList.add('visible');
+
+            const score = report.trust_score || report.overall_score || 0;
+            
+            // Animate score
+            animateScore(score);
+
+            // Update verdict
+            const verdictEl = document.getElementById('verdictText');
+            if (score >= 70) {
+                verdictEl.textContent = 'HIGH TRUST';
+                verdictEl.className = 'verdict high';
+            } else if (score >= 40) {
+                verdictEl.textContent = 'MODERATE TRUST';
+                verdictEl.className = 'verdict moderate';
+            } else {
+                verdictEl.textContent = 'LOW TRUST';
+                verdictEl.className = 'verdict low';
+            }
+
+            // Update date
+            document.getElementById('reportDate').textContent = 
+                report.date ? `${report.date} at ${report.time}` : new Date(report.timestamp).toLocaleString();
+
+            // Update findings
+            const findingsList = document.getElementById('findingsList');
+            const findings = report.findings || [];
+            
+            if (findings.length > 0) {
+                findingsList.innerHTML = findings.map(f => `
+                    <div class="finding ${f.type}">
+                        <div class="finding-icon">
+                            <i class="fas fa-${getIcon(f.type)}"></i>
+                        </div>
+                        <div class="finding-content">
+                            <div class="finding-pillar">${f.pillar || 'General'}</div>
+                            <div class="finding-message">${f.message}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                findingsList.innerHTML = `
+                    <div class="finding success">
+                        <div class="finding-icon"><i class="fas fa-check"></i></div>
+                        <div class="finding-content">
+                            <div class="finding-pillar">General</div>
+                            <div class="finding-message">No significant issues detected</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Update pillars
+            const pillarsGrid = document.getElementById('pillarsGrid');
+            const pillars = report.pillars || {};
+            
+            let pillarsHtml = '';
+            
+            if (pillars.information_trust) {
+                const infoScore = pillars.information_trust.score;
+                pillarsHtml += `
+                    <div class="pillar-card">
+                        <div class="pillar-header">
+                            <span class="pillar-name"><i class="fas fa-file-alt"></i> Information Trust</span>
+                            <span class="pillar-score ${infoScore === null ? 'na' : ''}">${infoScore !== null ? infoScore + '/100' : 'N/A'}</span>
+                        </div>
+                        <div class="pillar-bar">
+                            <div class="pillar-bar-fill" style="width: ${infoScore || 0}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            if (pillars.media_trust) {
+                const mediaScore = pillars.media_trust.score;
+                pillarsHtml += `
+                    <div class="pillar-card">
+                        <div class="pillar-header">
+                            <span class="pillar-name"><i class="fas fa-image"></i> Media Trust</span>
+                            <span class="pillar-score ${mediaScore === null ? 'na' : ''}">${mediaScore !== null ? mediaScore + '/100' : 'N/A'}</span>
+                        </div>
+                        <div class="pillar-bar">
+                            <div class="pillar-bar-fill" style="width: ${mediaScore || 0}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (!pillarsHtml) {
+                pillarsHtml = `
+                    <div class="pillar-card">
+                        <div class="pillar-header">
+                            <span class="pillar-name"><i class="fas fa-shield-halved"></i> Overall Trust</span>
+                            <span class="pillar-score">${score}/100</span>
+                        </div>
+                        <div class="pillar-bar">
+                            <div class="pillar-bar-fill" style="width: ${score}%"></div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            pillarsGrid.innerHTML = pillarsHtml;
+
+            // Update content preview
+            document.getElementById('contentPreview').textContent = 
+                report.content || report.text || 'No content preview available';
+        }
+
+        function animateScore(targetScore) {
+            const scoreEl = document.getElementById('scoreValue');
+            const ringEl = document.getElementById('scoreRing');
+            const circumference = 283;
+            
+            // Update ring color based on score
+            if (targetScore >= 70) {
+                ringEl.style.stroke = '#00d26a';
+                scoreEl.style.color = '#00d26a';
+            } else if (targetScore >= 40) {
+                ringEl.style.stroke = '#ffa502';
+                scoreEl.style.color = '#ffa502';
+            } else {
+                ringEl.style.stroke = '#ff4757';
+                scoreEl.style.color = '#ff4757';
+            }
+
+            // Animate number
+            let current = 0;
+            const duration = 1000;
+            const increment = targetScore / (duration / 16);
+            
+            const animate = () => {
+                current += increment;
+                if (current >= targetScore) {
+                    current = targetScore;
+                    scoreEl.textContent = Math.round(current);
+                } else {
+                    scoreEl.textContent = Math.round(current);
+                    requestAnimationFrame(animate);
+                }
+            };
+            animate();
+
+            // Animate ring
+            const offset = circumference - (targetScore / 100) * circumference;
+            setTimeout(() => {
+                ringEl.style.strokeDashoffset = offset;
+            }, 100);
+        }
+
+        function getIcon(type) {
+            const icons = {
+                success: 'check',
+                warning: 'exclamation-triangle',
+                error: 'times',
+                info: 'info-circle'
+            };
+            return icons[type] || 'info-circle';
+        }
+
+        function showError() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

@@ -1,194 +1,199 @@
-# 🛡️ TrustGuarthat d AI - Static Web Dashboard
+# TrustGuard AI 🛡️
 
-A modern, responsive web dashboard for TrustGuard AI - an AI-powered platform for detecting deepfakes, hallucinations, and misinformation.
+AI-powered content verification platform for detecting hallucinations, deepfakes, and phishing URLs.
 
-## 🎨 Features
+## Features
 
-- **Modern Dashboard UI** - Clean, professional design with gradient accents
-- **Interactive Statistics** - Real-time trust score gauges and trend charts
-- **Analysis History** - Track all content analyses with trust scores
-- **Quick Actions** - Fast access to text analysis, file uploads, and URL scanning
-- **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
-- **Animated Components** - Smooth transitions and hover effects
-- **Toast Notifications** - User-friendly feedback system
-
-## 📁 Project Structure
-
-```
-trustgaurd-ai/
-├── index.html          # Main dashboard page
-├── css/
-│   └── style.css       # Complete styling
-├── js/
-│   └── script.js       # Interactive features
-├── assets/
-│   ├── images/         # Image assets
-│   └── logo.svg        # Logo file (to be added)
-└── README.md           # Project documentation
-```
-
-## 🚀 Getting Started
-
-### Option 1: Direct Open
-1. Simply open `index.html` in your web browser
-2. No server or build process required!
-
-### Option 2: Local Server (Recommended)
-Using Python:
-```bash
-# Python 3
-python -m http.server 8000
-
-# Python 2
-python -m SimpleHTTPServer 8000
-```
-
-Using Node.js:
-```bash
-npx http-server -p 8000
-```
-
-Then visit: `http://localhost:8000`
-
-## 🎯 Dashboard Features
-
-### Statistics Cards
-- **Total Analyses** - Track all completed analyses with growth trends
-- **Average Trust Score** - Visual gauge showing overall trust metrics
-- **Threats Detected** - Count of deepfakes and hallucinations found
-- **Daily Usage** - Progress toward daily analysis limits
-
-### Trust Score Trend Chart
-- Interactive time filters (7D, 30D, 90D, All)
-- SVG-based line chart with gradient fills
-- Visual representation of trust score changes over time
-
-### Recent Analyses Table
-- Content preview with type icons (text, image, video, link)
-- Color-coded trust badges (High: Green, Medium: Orange, Low: Red)
-- Quick action buttons for viewing details
-- Sortable and filterable (future enhancement)
-
-### Quick Actions Panel
-- **Analyze Text** - Paste or type content for analysis
-- **Upload File** - Support for PDF, DOCX, and images
-- **Scan URL** - Analyze web content directly
-
-### Trust Pillars Overview
-- **Information Trust** - Fact-checking & hallucination detection (85%)
-- **Media Trust** - Deepfake image & video detection (78%)
-
-### Activity Feed
-- Real-time activity notifications
-- Color-coded status indicators (success, warning, error)
-- Timestamp for each activity
-
-## 🎨 Design System
-
-### Color Palette
-- **Primary**: `#667eea` (Purple Blue)
-- **Secondary**: `#764ba2` (Deep Purple)
-- **Success**: `#4CAF50` (Green)
-- **Warning**: `#FF9800` (Orange)
-- **Error**: `#F44336` (Red)
-- **Gray Scale**: 50-900 levels
-
-### Typography
-- **Font Family**: Inter (Google Fonts)
-- **Weights**: 400, 500, 600, 700
-
-### Components
-- Cards with shadow elevation
-- Gradient buttons and badges
-- Smooth hover transitions
-- Responsive grid layouts
-
-## 🔧 Customization
-
-### Changing Colors
-Edit the CSS variables in `css/style.css`:
-```css
-:root {
-    --primary: #667eea;
-    --secondary: #764ba2;
-    /* ... other colors */
-}
-```
-
-### Adding New Pages
-1. Create a new HTML file following the same structure
-2. Link it in the sidebar navigation
-3. Update JavaScript navigation handlers
-
-### Modifying Data
-Update the static data in `index.html`:
-- Statistics values in `.stat-card` elements
-- Table rows in `.analyses-table tbody`
-- Activity items in `.activity-card`
-
-## 📱 Responsive Breakpoints
-
-- **Desktop**: > 1200px
-- **Tablet**: 768px - 1200px
-- **Mobile**: < 768px
-
-On mobile devices, the sidebar collapses and the layout adapts to a single column.
-
-## 🌐 Browser Support
-
-- ✅ Chrome (latest)
-- ✅ Firefox (latest)
-- ✅ Safari (latest)
-- ✅ Edge (latest)
-
-## 📦 Dependencies
-
-### External Libraries (CDN)
-- **Font Awesome 6.4.0** - Icons
-- **Google Fonts (Inter)** - Typography
-
-No JavaScript frameworks required! Built with vanilla JavaScript.
-
-## 🚧 Future Enhancements
-
-- [ ] Backend API integration
-- [ ] Real-time data updates via WebSocket
-- [ ] User authentication system
-- [ ] Advanced filtering and search
-- [ ] Export analysis reports (PDF/CSV)
-- [ ] Dark mode toggle
-- [ ] Multi-language support
-- [ ] Browser extension integration
-- [ ] Mobile app companion
-
-## 🔐 Security Features (Planned)
-
-- End-to-end encryption for sensitive data
-- HTTPS enforcement
-- Rate limiting
-- Input sanitization
-- CORS policy implementation
-
-## 👥 Team
-
-- **Frontend**: Static HTML/CSS/JS Dashboard
-- **Backend**: (To be implemented)
-- **AI Models**: (To be integrated)
-
-## 📄 License
-
-Copyright © 2026 TrustGuard AI. All rights reserved.
-
-## 🤝 Contributing
-
-This is currently a static frontend. Backend integration coming soon!
-
-## 📞 Support
-
-For questions or support, please contact the development team.
+- **🔍 Hallucination Detection** - Detect AI-generated misinformation using SelfCheckGPT
+- **📹 Deepfake Detection** - Analyze images and videos for AI manipulation
+- **🔗 URL Phishing Scanner** - Check URLs for phishing and malicious patterns
+- **🧩 Browser Extension** - Quick analysis directly from any webpage
 
 ---
 
-**Version**: 1.0  
-**Last Updated**: January 29, 2026  
-**Status**: Frontend Complete ✅ | Backend Pending 🚧
+## Quick Setup
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/AjayK47/trustgaurd-ai.git
+cd trustgaurd-ai
+```
+
+### 2. Create Virtual Environment
+```bash
+# Windows
+python -m venv .venv
+.venv\Scripts\activate
+
+# Mac/Linux
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 3. Install Dependencies
+```bash
+cd backend
+pip install -r requirements.txt
+```
+
+### 4. Configure API Keys
+Create a `.env` file in the `backend/` folder:
+```env
+GROQ_API_KEY=your-groq-api-key-here
+HF_API_TOKEN=your-huggingface-token-here
+```
+
+Get your API keys:
+- **Groq**: https://console.groq.com/keys
+- **Hugging Face**: https://huggingface.co/settings/tokens
+
+### 5. Start the Servers
+
+**Terminal 1 - Backend Server:**
+```bash
+cd backend
+python server.py
+```
+Backend runs on: http://localhost:5001
+
+**Terminal 2 - Frontend Server:**
+```bash
+cd trustgaurd-ai
+python -m http.server 8080
+```
+Frontend runs on: http://localhost:8080
+
+---
+
+## Windows Commands (Copy-Paste Ready)
+
+```powershell
+# Step 1: Clone and setup
+git clone https://github.com/AjayK47/trustgaurd-ai.git
+cd trustgaurd-ai
+
+# Step 2: Create virtual environment
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+
+# Step 3: Install dependencies
+cd backend
+pip install -r requirements.txt
+
+# Step 4: Create .env file (edit with your API keys)
+echo "GROQ_API_KEY=your-key-here" > .env
+echo "HF_API_TOKEN=your-hf-token-here" >> .env
+
+# Step 5: Start backend (Terminal 1)
+python server.py
+
+# Step 6: Start frontend (NEW Terminal 2)
+cd ..
+python -m http.server 8080
+```
+
+---
+
+## Usage
+
+### Dashboard
+Open http://localhost:8080 in your browser
+
+| Feature | URL |
+|---------|-----|
+| Home | http://localhost:8080/index.html |
+| Text Analysis | http://localhost:8080/analyze-text.html |
+| Media Analysis | http://localhost:8080/analyze-media.html |
+| URL Scanner | http://localhost:8080/scan-url.html |
+
+### Browser Extension
+1. Go to `chrome://extensions/` (or `edge://extensions/`)
+2. Enable **Developer mode** (top right toggle)
+3. Click **Load unpacked**
+4. Select the `extension/` folder
+5. Click the TrustGuard icon in toolbar to use
+
+---
+
+## Requirements
+
+Key Python packages (see `backend/requirements.txt`):
+
+```
+flask==3.0.0
+flask-cors==4.0.0
+python-dotenv==1.0.0
+transformers==4.36.0
+torch==2.1.2
+Pillow==10.1.0
+requests==2.31.0
+spacy==3.7.2
+nltk==3.8.1
+```
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/analyze` | POST | Text hallucination analysis |
+| `/api/analyze/fact-verification` | POST | Fact checking |
+| `/api/analyze/media` | POST | Deepfake detection |
+| `/api/analyze/url` | POST | URL phishing scan |
+| `/health` | GET | Server health check |
+
+---
+
+## Project Structure
+
+```
+trustgaurd-ai/
+├── backend/
+│   ├── server.py              # Flask API server
+│   ├── media_analyzer.py      # Deepfake detection
+│   ├── url_phishing_detector.py
+│   ├── requirements.txt
+│   └── .env                   # API keys (create this)
+├── extension/
+│   ├── manifest.json
+│   ├── popup/
+│   ├── background/
+│   └── content/
+├── index.html                 # Dashboard home
+├── analyze-text.html          # Text analysis
+├── analyze-media.html         # Media analysis
+├── scan-url.html              # URL scanner
+└── report.html                # Detailed report view
+```
+
+---
+
+## Troubleshooting
+
+**Server won't start?**
+```bash
+# Make sure venv is activated
+.venv\Scripts\Activate.ps1
+cd backend
+python server.py
+```
+
+**Extension not connecting?**
+- Check backend is running on port 5001
+- Check for CORS errors in browser console
+
+**Analysis failing?**
+- Verify API keys are set in `backend/.env`
+- Check terminal for error messages
+
+---
+
+## License
+
+MIT License
+
+---
+
+**Version**: 2.0  
+**Last Updated**: January 30, 2026
