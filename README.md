@@ -1,6 +1,6 @@
 # TrustGuard AI 🛡️
 
-AI-powered content verification platform for detecting hallucinations, deepfakes, and phishing URLs.
+AI-powered content verification platform for detecting hallucinations, deepfakes, and phishing URLs. TrustGuard AI provides both a web interface and browser extension for comprehensive content analysis.
 
 ## Features
 
@@ -8,14 +8,36 @@ AI-powered content verification platform for detecting hallucinations, deepfakes
 - **📹 Deepfake Detection** - Analyze images and videos for AI manipulation
 - **🔗 URL Phishing Scanner** - Check URLs for phishing and malicious patterns
 - **🧩 Browser Extension** - Quick analysis directly from any webpage
+- **📊 Analysis Dashboard** - View detailed reports and analysis history
+- **🔐 Trust Scoring** - Comprehensive trust assessment algorithm
 
 ---
+
+## Project Structure
+
+```
+trustgaurd-ai/
+├── backend/              # Flask/FastAPI backend server
+│   ├── app.py           # Main application
+│   ├── server.py        # Server configuration
+│   ├── services/        # AI detection services
+│   └── routes/          # API routes
+├── extension/           # Browser extension
+│   ├── popup/           # Extension popup UI
+│   ├── content/         # Content script
+│   ├── background/      # Background scripts
+│   └── backend/         # Extension-specific backend
+├── index.html           # Main dashboard
+├── upload-file.html     # File upload interface
+├── scan-url.html        # URL scanning interface
+└── analyze-text.html    # Text analysis interface
+```
 
 ## Quick Setup
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/AjayK47/trustgaurd-ai.git
+git clone https://github.com/arjunv122/Trust-Guard-AI-Extension.git
 cd trustgaurd-ai
 ```
 
@@ -69,7 +91,7 @@ Frontend runs on: http://localhost:8080
 
 ```powershell
 # Step 1: Clone and setup
-git clone https://github.com/AjayK47/trustgaurd-ai.git
+git clone https://github.com/arjunv122/Trust-Guard-AI-Extension.git
 cd trustgaurd-ai
 
 # Step 2: Create virtual environment
@@ -189,6 +211,62 @@ python server.py
 
 ---
 
+## Technology Stack
+
+**Backend:**
+- Flask/FastAPI
+- Python 3.8+
+- Transformers (Hugging Face)
+- PyTorch
+- Groq API
+
+**Frontend:**
+- HTML5 / CSS3
+- Vanilla JavaScript
+- Responsive Design
+
+**Browser Extension:**
+- Manifest V3
+- Content Scripts
+- Background Service Workers
+- Popup UI
+
+---
+
+## API Keys Required
+
+Get your free API keys from:
+1. **Groq API** - https://console.groq.com/keys (Fast LLM API)
+2. **Hugging Face** - https://huggingface.co/settings/tokens (Model access)
+
+---
+
+## Features Details
+
+### Hallucination Detection
+Uses SelfCheckGPT to verify if AI-generated content contains factual inconsistencies.
+
+### Deepfake Detection
+Analyzes images and videos to detect signs of AI manipulation or synthetic media.
+
+### URL Phishing Scanner
+Checks URLs against phishing databases and analyzes malicious patterns.
+
+### Trust Scoring Algorithm
+Comprehensive scoring based on:
+- Content consistency
+- Source reputation
+- Media authenticity
+- URL safety patterns
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit pull requests.
+
+---
+
 ## License
 
 MIT License
@@ -196,4 +274,5 @@ MIT License
 ---
 
 **Version**: 2.0  
-**Last Updated**: January 30, 2026
+**Repository**: https://github.com/arjunv122/Trust-Guard-AI-Extension  
+**Last Updated**: April 28, 2026
